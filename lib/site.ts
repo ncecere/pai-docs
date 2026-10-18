@@ -24,26 +24,26 @@ export const productRepo = 'https://github.com/ncecere/pi-agent-interface';
 export const platformRepo = 'https://github.com/ncecere/pi-durable-platform';
 
 /** The latest tagged release of Pi Agent Interface. */
-export const productVersion = 'v0.3.0';
+export const productVersion = 'v0.3.1';
 
 /** The date that release was tagged (YYYY-MM-DD). */
 export const productReleaseDate = '2026-10-18';
 
 /**
  * What these docs describe: the product at its latest release tag, at this
- * commit. Read the tag (`git show v0.3.0:<path>`), not a working tree: work
+ * commit. Read the tag (`git show v0.3.1:<path>`), not a working tree: work
  * for the next release happens on main.
  */
 export const describedRef = productVersion;
-export const describedCommit = 'b78e988';
+export const describedCommit = 'fe94cdb';
 export const describedLabel = `${describedRef} (${productReleaseDate})`;
 
 /** Where the release workflow publishes the container image (published since v0.2.0). */
 export const productImage = 'ghcr.io/ncecere/pi-agent-interface';
 
-/** The digest of the v0.3.0 image (from its GitHub Release). */
+/** The digest of the v0.3.1 image (from its GitHub Release). */
 export const productImageDigest =
-  'sha256:08034bb95172c030564f2ba86428ef7586573a2213e218ee31b0b8090b94fbc8';
+  'sha256:d2c1fa505e40c396aebe44806f0b3316e5da379b44b40dfead16a7638225e91c';
 
 export const appName = 'Pi Agent Interface docs';
 export const docsRoute = '/docs';

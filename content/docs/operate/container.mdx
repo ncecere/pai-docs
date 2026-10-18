@@ -7,18 +7,18 @@ Pi Agent Interface ships as one container image: one Node.js 22 process that ser
 
 ## Getting the image
 
-Since v0.2.0 the image is published: `ghcr.io/ncecere/pi-agent-interface`. The repository's release workflow (`.github/workflows/image.yml`) builds it for each release tag as a **multi-arch** image (linux/amd64 and linux/arm64), scans it for vulnerabilities, attaches SBOM and provenance attestations, tags it `vX.Y.Z` (and `latest` for final releases) and **signs** it with cosign keyless signing. The v0.3.0 image is:
+Since v0.2.0 the image is published: `ghcr.io/ncecere/pi-agent-interface`. The repository's release workflow (`.github/workflows/image.yml`) builds it for each release tag as a **multi-arch** image (linux/amd64 and linux/arm64), scans it for vulnerabilities, attaches SBOM and provenance attestations, tags it `vX.Y.Z` (and `latest` for final releases) and **signs** it with cosign keyless signing. The v0.3.1 image is:
 
 ```text
-ghcr.io/ncecere/pi-agent-interface:v0.3.0
-ghcr.io/ncecere/pi-agent-interface@sha256:08034bb95172c030564f2ba86428ef7586573a2213e218ee31b0b8090b94fbc8
+ghcr.io/ncecere/pi-agent-interface:v0.3.1
+ghcr.io/ncecere/pi-agent-interface@sha256:d2c1fa505e40c396aebe44806f0b3316e5da379b44b40dfead16a7638225e91c
 ```
 
-The digest is also on the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.3.0). A tag can move, so check the signature before you deploy, and deploy by digest:
+The digest is also on the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.3.1). A tag can move, so check the signature before you deploy, and deploy by digest:
 
 ```sh
-cosign verify ghcr.io/ncecere/pi-agent-interface@sha256:08034bb95172c030564f2ba86428ef7586573a2213e218ee31b0b8090b94fbc8 \
-  --certificate-identity https://github.com/ncecere/pi-agent-interface/.github/workflows/image.yml@refs/tags/v0.3.0 \
+cosign verify ghcr.io/ncecere/pi-agent-interface@sha256:d2c1fa505e40c396aebe44806f0b3316e5da379b44b40dfead16a7638225e91c \
+  --certificate-identity https://github.com/ncecere/pi-agent-interface/.github/workflows/image.yml@refs/tags/v0.3.1 \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
@@ -27,7 +27,7 @@ The identity names the workflow and the release tag that built the image, so for
 ```sh
 git clone https://github.com/ncecere/pi-agent-interface.git
 cd pi-agent-interface
-git checkout v0.3.0
+git checkout v0.3.1
 docker build -t pi-agent-interface .
 ```
 

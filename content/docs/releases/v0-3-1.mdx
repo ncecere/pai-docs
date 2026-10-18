@@ -1,0 +1,19 @@
+---
+title: v0.3.1
+description: "Pi Agent Interface v0.3.1 (2026-10-18): two inbox fixes. On a touch screen a row's More actions button no longer covers its status and pin, and a row's status steps aside while its menu is open or a delete is being confirmed."
+---
+
+**Released 2026-10-18.** Tag [`v0.3.1`](https://github.com/ncecere/pi-agent-interface/tree/v0.3.1) · image `ghcr.io/ncecere/pi-agent-interface:v0.3.1` (`sha256:d2c1fa505e40c396aebe44806f0b3316e5da379b44b40dfead16a7638225e91c`) · migrations 1 to 3 (none new).
+
+Two inbox glitches found while capturing the screenshots. These docs describe this release.
+
+## Upgrading from 0.3.0
+
+Replace the image and restart. There is no new migration and nothing to change by hand. See [Upgrades and backups](/docs/operate/upgrades-and-backups#from-v030-to-v031). Upgrading from an older version? Read the [v0.3.0](/docs/releases/v0-3-0), [v0.2.1](/docs/releases/v0-2-1) and [v0.2.0](/docs/releases/v0-2-0#upgrading-from-010) notes too.
+
+## What's fixed
+
+- **On a touch screen**, where a row's **More actions** button (…) is always shown, it was drawn over the row's status (**Done**, **Failed**, **Woke**, **Working** with its timer) and its pin. The status now keeps clear of the button.
+- **With a row's menu open**, a row's status was drawn under its actions. The status now steps aside while the menu is open or a delete is being confirmed, as it already did on hover and focus.
+
+See [The inbox](/docs/use/inbox#acting-on-a-conversation).
