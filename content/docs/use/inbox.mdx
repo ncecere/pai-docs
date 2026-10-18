@@ -32,7 +32,7 @@ The corner of a row says what the conversation needs:
 |---|---|
 | **Working**, with a timer | The agent is writing a reply. The row is dimmed until you look at it. |
 | **Done** | A reply finished since you last looked. |
-| **Failed** | A reply failed since you last looked, or the agent dropped your message without answering. |
+| **Failed** | A reply failed since you last looked (the platform's reason is shown in the conversation), or the agent dropped your message without answering: it is idle, your message is the last in the conversation, and more than 90 seconds have passed since it started working. |
 | **Woke** | A snooze ended and you haven't looked yet. |
 
 Done and Failed are the conversations that need you. The browser tab's title counts them, for example **(2) Pi Agent Interface**. Opening the conversation clears its status.

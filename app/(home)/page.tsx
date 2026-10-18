@@ -37,7 +37,7 @@ const sections = [
     title: 'Releases',
     href: '/docs/releases',
     icon: <Tag />,
-    description: `What changed in each release: ${productVersion} is the latest, with Connect, the admin dashboard and a published image.`,
+    description: `What changed in each release: ${productVersion} is the latest, a patch release after v0.2.0's Connect, admin dashboard and published image.`,
   },
 ];
 

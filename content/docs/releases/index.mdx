@@ -6,10 +6,11 @@ description: Pi Agent Interface's releases, what changed in each, and what to ex
 | Release | Date | In short |
 |---|---|---|
 | [Unreleased](/docs/releases/unreleased) | <span className="whitespace-nowrap">on `main`</span> | Nothing yet. |
+| [v0.2.1](/docs/releases/v0-2-1) | <span className="whitespace-nowrap">2026-10-18</span> | A patch release with fixes found while writing these docs: your teams' agents in their own section of My agents, no date on the Account connection card, `DEV_ACCOUNTS` for development, and a corrected note on the database. No new migration. |
 | [v0.2.0](/docs/releases/v0-2-0) | <span className="whitespace-nowrap">2026-10-18</span> | People connect their own agent platform account (Connect). The app's own PostgreSQL, the admin dashboard and Settings, provided agents and people's own agents, the inbox on every device and live from the platform, renaming conversations, optional features with usage per person, clearer tool steps and failures, the Face logo, a Kubernetes base, and a published, signed container image. Migrations 1 to 3. |
 | [v0.1.0](/docs/releases/v0-1-0) | <span className="whitespace-nowrap">2026-10-18</span> | The first release: a chat app for Pi Durable agents, one assistant per person, an inbox across conversations, animated avatars, single sign-on, and a container image built from the repository. |
 
-These docs describe **v0.2.0**, at commit `4815fa6`. The full history is in the repository's [changelog](https://github.com/ncecere/pi-agent-interface/blob/main/CHANGELOG.md).
+These docs describe **v0.2.1**, at commit `e1fbeac`. The full history is in the repository's [changelog](https://github.com/ncecere/pi-agent-interface/blob/main/CHANGELOG.md).
 
 ## Before 1.0
 
@@ -19,4 +20,4 @@ These docs describe **v0.2.0**, at commit `4815fa6`. The full history is in the 
 
 ## How releases are published
 
-Each release is a Git tag, `vX.Y.Z`, whose version matches `package.json` and whose notes are the `## X.Y.Z` section of `CHANGELOG.md`. Pushing the tag runs the repository's `image.yml` workflow, which builds the image for linux/amd64 and linux/arm64, checks that it reports the version and runs as the non-root user, scans it, publishes `ghcr.io/ncecere/pi-agent-interface:vX.Y.Z` (and `latest` for final releases), signs it with cosign keyless signing, and creates the GitHub release with the image's digest. The workflow was added after v0.1.0, so v0.1.0 has no published image and v0.2.0 is the first that has. See [The container image](/docs/operate/container#getting-the-image).
+Each release is a Git tag, `vX.Y.Z`, whose version matches `package.json` and whose notes are the `## X.Y.Z` section of `CHANGELOG.md`. Pushing the tag runs the repository's `image.yml` workflow, which builds the image for linux/amd64 and linux/arm64, checks that it reports the version and runs as the non-root user, scans it, publishes `ghcr.io/ncecere/pi-agent-interface:vX.Y.Z` (and `latest` for final releases), signs it with cosign keyless signing, and creates the GitHub release with the image's digest. The workflow was added after v0.1.0, so v0.1.0 has no published image and v0.2.0 is the first that has (v0.2.1 is the latest). See [The container image](/docs/operate/container#getting-the-image).

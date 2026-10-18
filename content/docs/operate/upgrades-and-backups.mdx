@@ -33,15 +33,19 @@ People's conversations aren't affected: they live on the platform. Sessions carr
 
 ### From v0.1.0 to v0.2.0
 
-- **A database is now required.** v0.1.0 had none. Set `DATABASE_URL` to an empty PostgreSQL database (see [PostgreSQL and migrations](/docs/operate/database)); the first pod to start applies migrations 1 to 3. Set `INITIAL_ADMIN_EMAIL` so the instance gets its [first administrator](/docs/administer/first-administrator).
+- **0.2.0 adds a database, and it is now required.** v0.1.0 had none. Set `DATABASE_URL` to an empty PostgreSQL database (see [PostgreSQL and migrations](/docs/operate/database)); the first pod to start creates the tables by applying three migrations: people, settings and preferences; people's agents; and platform connections. Set `INITIAL_ADMIN_EMAIL` so the instance gets its [first administrator](/docs/administer/first-administrator).
 - **A deployment with `PLATFORM_SERVICE_KEY` set stays in service mode**, as before: nothing to change, and each person's assistant is kept, with its conversations. **Without a service key, the app now defaults to Connect** (`PLATFORM_AUTH=connect`). To keep using a service account, set `PLATFORM_AUTH=service`. The Kubernetes base sets `PLATFORM_AUTH=connect`, so a service-mode overlay must set it back.
 - **Moving to Connect** is a choice, not part of the upgrade. In Connect mode people's agents live in their personal workspaces on the platform, so they start with new copies of the provided agents there. The agents made in service mode stay in the team on the platform, and the app doesn't move conversations between the two. Check first that the platform offers Connect and that the app's `/oauth/client-metadata.json` is reachable by it, as described in [The agent platform](/docs/operate/platform#connect-mode).
 - **Everyone signs in again once**: sessions now carry a session version, and v0.1.0's sessions end.
 - `AGENT_MODEL` is now only the fallback default: [Admin → Agents](/docs/administer/agents) sets the default model and wins.
 - **The image no longer contains npm, corepack or yarn**, and is now published and signed. See [The container image](/docs/operate/container#getting-the-image).
-- New settings: `PLATFORM_AUTH`, `CONNECT_EMAIL_MATCH`, `DISABLED_FEATURES`, `DATABASE_URL`, `INITIAL_ADMIN_EMAIL`.
+- New settings: `DATABASE_URL` (required), `INITIAL_ADMIN_EMAIL`, `PLATFORM_AUTH`, `CONNECT_EMAIL_MATCH`, `DISABLED_FEATURES`.
 
 See the [v0.2.0 notes](/docs/releases/v0-2-0#upgrading-from-010) for the rest.
+
+### From v0.2.0 to v0.2.1
+
+A patch release: replace the image and restart. There is no new migration and nothing to change by hand. `DEV_ACCOUNTS` is a new, optional, development-only setting. See the [v0.2.1 notes](/docs/releases/v0-2-1).
 
 ## What to back up
 

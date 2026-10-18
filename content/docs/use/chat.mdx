@@ -48,7 +48,9 @@ A failed reply says so in its place, in plain words, with **Try again**:
 
 <Screenshot slot="chat-reply-failed" />
 
-If the agent stops without answering at all, a note under your message says **No reply.** *Assistant* stopped without answering your last message, with **Try again**. In the inbox, a turn the agent dropped shows **Failed** rather than Working.
+If the platform knows why a turn went unanswered, it reports the reason and the conversation shows **Failed** with that reason, as above.
+
+A turn can also be dropped without any reason being reported. The app then covers for it: if the agent is idle, your message is the last one in the conversation, and more than 90 seconds have passed since the agent started working on it, the conversation shows **Failed** rather than Working. While you have the conversation open, a note under your message appears after a few seconds: **No reply.** *Assistant* stopped without answering your last message, with **Try again**.
 
 **Try again** and **Send again** (under a reply) put your last question back in the message box, so you can send it as it is or change it first.
 

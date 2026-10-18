@@ -56,6 +56,7 @@ At least one way to sign in is required: OIDC, or `DEV_AUTH` on a loopback `APP_
 | `OIDC_CLIENT_SECRET` (secret) | none | The client's secret. The three `OIDC_*` above go together: any one set without the others stops the server ("OIDC_ISSUER, OIDC_CLIENT_ID and OIDC_CLIENT_SECRET go together"). |
 | `OIDC_SCOPES` | `openid profile email` | The scopes asked for, separated by spaces. Used only with OIDC. |
 | `DEV_AUTH` | `false` | Exactly `true` turns on the development accounts Tim, Bob and Sally (`tim@example.test` and so on), with no password. Refused unless `APP_URL` is loopback ("DEV_AUTH requires a loopback APP_URL"). Any other value is off. |
+| `DEV_ACCOUNTS` | the three accounts above | Development only. With `DEV_AUTH=true`, a JSON array of `{"id","name","email"}` that replaces Tim, Bob and Sally, for example `[{"id":"priya","name":"Priya Shah","email":"priya.shah@example.com"}]`. Each `id` is unique, 1 to 64 letters, digits, dots, dashes or underscores; `name` and `email` are required, and there must be at least one account. An invalid value stops the server and names the problem. Ignored while `DEV_AUTH` is off. |
 
 ## Sessions
 

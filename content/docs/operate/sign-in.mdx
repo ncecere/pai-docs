@@ -69,6 +69,8 @@ After signing in, people return to the page that sent them to sign in.
 
 `DEV_AUTH=true` adds **Development accounts** to the sign-in page: **Tim**, **Bob** and **Sally**, with no password ("Local development only. These accounts have no password."). The server refuses to start with it unless `APP_URL` is `localhost`, `127.0.0.1` or `[::1]`, and the development sign-in itself only accepts requests from the app's own origin. Both can be on at once for local testing. Never use them on a reachable host.
 
+To offer other accounts than these three, set [`DEV_ACCOUNTS`](/docs/operate/configuration#sign-in) to a JSON array of `{"id","name","email"}`. It is read only while `DEV_AUTH` is on.
+
 With neither OIDC nor `DEV_AUTH` the server doesn't start.
 
 ## Tested with

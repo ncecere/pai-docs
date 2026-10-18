@@ -5,15 +5,15 @@ description: "Pi Agent Interface v0.2.0 (2026-10-18): people connect their own a
 
 **Released 2026-10-18.** Tag [`v0.2.0`](https://github.com/ncecere/pi-agent-interface/tree/v0.2.0) · image `ghcr.io/ncecere/pi-agent-interface:v0.2.0` (`sha256:b3d6103ff6a4b0149c301d78aa7a8995c6424b505b5e9a9245d2ccf5e15fb41c`) · migrations 1 to 3.
 
-People connect their own agent platform account, and the app gains an administration area, settings, agents people can make and a live inbox. It also gets its own logo, site and documentation. These docs describe this release.
+People connect their own agent platform account, and the app gains an administration area, settings, agents people can make and a live inbox. It also gets its own logo, site and documentation. [v0.2.1](/docs/releases/v0-2-1) fixes a few things found while these docs were written.
 
 ## Upgrading from 0.1.0
 
-- **A database is now required.** v0.1.0 had none. Set `DATABASE_URL`; the server creates its tables when a pod starts (migrations 1 to 3, in [PostgreSQL and migrations](/docs/operate/database)). Set `INITIAL_ADMIN_EMAIL` for the first administrator.
+- **0.2.0 adds a database; a database is now required.** 0.1.0 had none and kept nothing of its own. Set `DATABASE_URL` to a PostgreSQL database; the app creates its tables when it starts, in three migrations: people, settings and preferences; people's agents; and platform connections (see [PostgreSQL and migrations](/docs/operate/database)). Set `INITIAL_ADMIN_EMAIL` for the first administrator.
 - **A deployment with `PLATFORM_SERVICE_KEY` set stays in service mode, as before.** Without a service key the app now defaults to Connect (`PLATFORM_AUTH=connect`). Set `PLATFORM_AUTH=service` to keep using a service account.
 - `AGENT_MODEL` is now only the fallback default: [Admin → Agents](/docs/administer/agents) sets the default model and wins.
 - **The image no longer contains npm, corepack or yarn.**
-- New settings: `PLATFORM_AUTH`, `CONNECT_EMAIL_MATCH`, `DISABLED_FEATURES`, `DATABASE_URL`, `INITIAL_ADMIN_EMAIL`. See [Configuration](/docs/operate/configuration).
+- New settings: `DATABASE_URL` (required), `INITIAL_ADMIN_EMAIL`, `PLATFORM_AUTH`, `CONNECT_EMAIL_MATCH`, `DISABLED_FEATURES`. See [Configuration](/docs/operate/configuration).
 - Everyone signs in again once: sessions now carry a session version.
 - Each person's assistant is kept in service mode: it has the same key on the platform (`u:<person>`) and becomes their built-in provided agent, with its conversations.
 

@@ -44,7 +44,7 @@ services:
       retries: 20
 
   app:
-    image: ghcr.io/ncecere/pi-agent-interface:v0.2.0
+    image: ghcr.io/ncecere/pi-agent-interface:v0.2.1
     depends_on:
       db:
         condition: service_healthy
@@ -130,7 +130,7 @@ pnpm db:up                   # the development PostgreSQL (compose.yaml)
 pnpm dev
 ```
 
-`.env.example` already has `APP_URL=http://localhost:5177` and the `DATABASE_URL` of the development database. Open [http://localhost:5177](http://localhost:5177) and sign in as Tim, Bob or Sally.
+`.env.example` already has `APP_URL=http://localhost:5177` and the `DATABASE_URL` of the development database. Open [http://localhost:5177](http://localhost:5177) and sign in as Tim, Bob or Sally. To sign in as other people, set `DEV_ACCOUNTS` to a JSON array of `{"id","name","email"}`; it replaces the three accounts while `DEV_AUTH=true`.
 
 ## What to try
 

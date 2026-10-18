@@ -3,7 +3,7 @@ title: PostgreSQL and migrations
 description: What Pi Agent Interface keeps in its own PostgreSQL database, and how the schema is migrated when the server starts.
 ---
 
-Pi Agent Interface has its own PostgreSQL database, separate from the agent platform's, named by `DATABASE_URL`. Conversations aren't in it: they live on the platform.
+Pi Agent Interface has its own PostgreSQL database, separate from the agent platform's, named by `DATABASE_URL`. Conversations aren't in it: they live on the platform. v0.1.0 had no database of its own; v0.2.0 added it, and the app creates its tables when it starts.
 
 ## What is in it
 

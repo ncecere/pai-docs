@@ -3,7 +3,7 @@ title: Kubernetes
 description: The Kustomize base in Pi Agent Interface's repository — a two-replica Deployment, probes, a PodDisruptionBudget, default-deny NetworkPolicies and the secret it expects — and what your overlay adds.
 ---
 
-The product's repository has a generic [Kustomize](https://kustomize.io) base, `deploy/kubernetes/base`, and a README for it (`deploy/kubernetes/README.md`). This page describes the base as it is at v0.2.0. There is no Helm chart.
+The product's repository has a generic [Kustomize](https://kustomize.io) base, `deploy/kubernetes/base`, and a README for it (`deploy/kubernetes/README.md`). This page describes the base as it is at v0.2.1. There is no Helm chart.
 
 The base holds **no secret values, no namespace and no ingress**. Your own overlay supplies those.
 
@@ -25,7 +25,7 @@ The base holds **no secret values, no namespace and no ingress**. Your own overl
 
 | File | Makes |
 |---|---|
-| `kustomization.yaml` | Lists the resources, generates the ConfigMap, and sets the image to `ghcr.io/ncecere/pi-agent-interface` at tag `v0.2.0`. |
+| `kustomization.yaml` | Lists the resources, generates the ConfigMap, and sets the image to `ghcr.io/ncecere/pi-agent-interface` at tag `v0.2.1`. |
 | `config.env` | The settings in the ConfigMap `pi-agent-interface-config` (below). The name gets a hash of the content, and the Deployment's reference follows, so a change to the settings rolls the pods. |
 | `deployment.yaml` | The Deployment `pi-agent-interface` and its PodDisruptionBudget. |
 | `service.yaml` | A ClusterIP Service `pi-agent-interface` on port 80, to the container's port 8080, with no session affinity: conversations stream through the app, which any replica serves. |
@@ -107,14 +107,14 @@ This is how the app reaches the agent platform and the identity provider: over h
 
 ### A namespace and an image pin
 
-The base uses the release tag. Pin the digest from the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.2.0), after verifying its signature (see [The container image](/docs/operate/container#getting-the-image)). The digest takes precedence over the tag. Never use `latest`.
+The base uses the release tag. Pin the digest from the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.2.1), after verifying its signature (see [The container image](/docs/operate/container#getting-the-image)). The digest takes precedence over the tag. Never use `latest`.
 
 ```yaml
 namespace: pi-agent-interface
 images:
   - name: ghcr.io/ncecere/pi-agent-interface
-    newTag: v0.2.0
-    digest: sha256:b3d6103ff6a4b0149c301d78aa7a8995c6424b505b5e9a9245d2ccf5e15fb41c
+    newTag: v0.2.1
+    digest: sha256:3eb3c21fae4c142f9df686b4b33dc38b0967b2864b8f9f6b2b7f4ee0ec79b01f
 ```
 
 </Step>

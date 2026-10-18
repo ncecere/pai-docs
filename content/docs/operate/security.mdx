@@ -13,7 +13,7 @@ How Pi Agent Interface is secured depends on how it reaches the agent platform (
 When a person connects, the platform gives the app an access token and a refresh token for them (scope `agents`).
 
 - **Encrypted at rest.** The server keeps them in its database (`platform_connections`), each sealed with AES-256-GCM under a key derived from `SESSION_SECRET` (HKDF-SHA256, a purpose of its own, apart from the session cookie's). The database never holds a token in the clear.
-- **Never in the browser.** The browser holds only the app's session cookie. The server calls the platform for the person, and the browser is told only which platform account is connected and when it was last renewed.
+- **Never in the browser.** The browser holds only the app's session cookie. The server calls the platform for the person, and the browser is told which platform account is connected (its email or name), never a token.
 - **One person's token, that person's agents.** There is no shared key. A token reaches what its person may use on the platform, and the platform enforces it. The app still refuses to rename or delete anything outside the person's own personal workspace, and provided copies can't be deleted from the app.
 - **Renewed one at a time.** Access tokens are renewed shortly before they run out; the refresh token changes on every use, so a database lock lets only one renewal for a person run at a time, across replicas. A renewal the platform refuses ends the connection and the person is asked to connect again.
 - **Revoked when it should be.** **Disconnect** and a refused account ask the platform to revoke the refresh token (best effort), then forget the tokens.

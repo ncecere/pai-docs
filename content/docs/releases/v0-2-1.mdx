@@ -1,0 +1,19 @@
+---
+title: v0.2.1
+description: "Pi Agent Interface v0.2.1 (2026-10-18): a patch release with fixes found while writing these docs: your teams' agents in their own section, no date on the Account connection card, DEV_ACCOUNTS, and a corrected note on the database."
+---
+
+**Released 2026-10-18.** Tag [`v0.2.1`](https://github.com/ncecere/pi-agent-interface/tree/v0.2.1) · image `ghcr.io/ncecere/pi-agent-interface:v0.2.1` (`sha256:3eb3c21fae4c142f9df686b4b33dc38b0967b2864b8f9f6b2b7f4ee0ec79b01f`) · migrations 1 to 3 (none new).
+
+A patch release. It only fixes defects found while these docs were written. These docs describe this release.
+
+## Upgrading from 0.2.0
+
+Replace the image and restart. There is no new migration and nothing to change by hand. See [Upgrades and backups](/docs/operate/upgrades-and-backups#from-v020-to-v021). Upgrading from 0.1.0? Read the [v0.2.0 notes](/docs/releases/v0-2-0#upgrading-from-010) too.
+
+## Fixes
+
+- **Settings → My agents**: a team's agents no longer appear under **Provided for you**. They have their own section, **From your teams**, which is read-only and shown only in Connect mode, when you belong to teams that have agents. See [Agents](/docs/use/agents#my-agents).
+- **Settings → Account**: the **Agent platform** card no longer shows a connection date. The time it held was the last token renewal, not when you connected. The card shows the connected account's email, and **Disconnect**. See [Connecting your platform account](/docs/use/connect-your-platform-account#your-connection-in-settings).
+- **`DEV_ACCOUNTS`**: with `DEV_AUTH=true`, choose the development accounts offered instead of Tim, Bob and Sally: a JSON array of `{"id","name","email"}`. Development only; ignored while `DEV_AUTH` is off. See [Configuration](/docs/operate/configuration#sign-in).
+- **The v0.2.0 notes were corrected.** They said the database "gains two migrations". v0.1.0 had no database: v0.2.0 adds it (`DATABASE_URL`, three migrations: people, settings and preferences; people's agents; platform connections). See the [v0.2.0 notes](/docs/releases/v0-2-0#upgrading-from-010).
