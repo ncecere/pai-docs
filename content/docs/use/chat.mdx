@@ -54,6 +54,25 @@ A turn can also be dropped without any reason being reported. The app then cover
 
 **Try again** and **Send again** (under a reply) put your last question back in the message box, so you can send it as it is or change it first.
 
+## When, which model, and how many tokens
+
+Pi Agent Interface shows a little about each message beside its buttons:
+
+- **When it was sent.** Point at a message to see the time it was sent: the time today, the date and time otherwise. Point at the line itself for the full date and time.
+- **Which model, and how many tokens.** Under a finished reply you also see the model that wrote it and the tokens it used, for example "1.2k tokens". The count is summed over all of the reply's steps. The line's tooltip gives the split: how many tokens went in, how many came out, and how many were read from cache (when any were).
+
+On a phone these are always shown; on a wide screen they appear when you point at the message or move focus into it. A reply's model is the one its last step ran on.
+
+These come from the agent platform's records, not from the app. A platform that doesn't record them shows nothing extra: a message without a recorded time shows no time, and a reply without a recorded model or token count shows neither. The platform records them from its next release on.
+
+## A reply cut short
+
+When a reply ended because the model reached its length limit, a note under it says so:
+
+> The model stopped at its length limit, so this reply may be cut short.
+
+It keeps a half-finished answer from being mistaken for a finished one. This too comes from the platform's record of why the reply ended.
+
 ## What you can do with a message
 
 Point at a message to see its buttons (on a phone they are always shown):

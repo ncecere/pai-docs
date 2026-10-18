@@ -22,6 +22,18 @@ Pi Agent Interface has its own PostgreSQL database, separate from the agent plat
 
 PostgreSQL 17 is what the repository's development setup and its tests use. The database user needs to create tables and indexes in its database (the migrations run as it). The server opens up to 10 connections.
 
+## Waiting for the database
+
+Since v0.3.0 the app **waits for its database when it starts**, for up to three minutes, before it migrates and listens. A first deployment, or a node restart, often starts the app beside its database; the app no longer exits and gets restarted until the database answers. The log says `[server] waiting for the database…` once, and `[server] the database answered after Ns` when it does. It retries after half a second, with the pause growing to five seconds.
+
+Only errors that mean the database is **not reachable yet** are waited out:
+
+- connection refused, a host or network that can't be reached, a connection reset or closed, and timeouts (including a name that can't be resolved yet);
+- the database starting up (`57P03`);
+- too many connections (`53300`).
+
+Anything else fails **at once**, with the database's own message: a wrong password, or a database that doesn't exist. Those won't fix themselves, so the app doesn't wait for them. If the database still hasn't answered after three minutes, the server stops with "The database did not answer within 180s" and the last error.
+
 ## Migrations
 
 The server applies any migrations it hasn't applied yet **every time it starts**, before it listens, in one transaction, holding a PostgreSQL advisory lock so several servers starting together don't race. The log names what it applied: `[server] database migrated: 1, 2, 3`. The recovery command (`promote`) migrates first too.

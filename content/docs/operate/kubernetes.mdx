@@ -3,7 +3,7 @@ title: Kubernetes
 description: The Kustomize base in Pi Agent Interface's repository — a two-replica Deployment, probes, a PodDisruptionBudget, default-deny NetworkPolicies and the secret it expects — and what your overlay adds.
 ---
 
-The product's repository has a generic [Kustomize](https://kustomize.io) base, `deploy/kubernetes/base`, and a README for it (`deploy/kubernetes/README.md`). This page describes the base as it is at v0.2.1. There is no Helm chart.
+The product's repository has a generic [Kustomize](https://kustomize.io) base, `deploy/kubernetes/base`, and a README for it (`deploy/kubernetes/README.md`). This page describes the base as it is at v0.3.0. There is no Helm chart.
 
 The base holds **no secret values, no namespace and no ingress**. Your own overlay supplies those.
 
@@ -25,7 +25,7 @@ The base holds **no secret values, no namespace and no ingress**. Your own overl
 
 | File | Makes |
 |---|---|
-| `kustomization.yaml` | Lists the resources, generates the ConfigMap, and sets the image to `ghcr.io/ncecere/pi-agent-interface` at tag `v0.2.1`. |
+| `kustomization.yaml` | Lists the resources, generates the ConfigMap, and sets the image to `ghcr.io/ncecere/pi-agent-interface` at tag `v0.3.0`. |
 | `config.env` | The settings in the ConfigMap `pi-agent-interface-config` (below). The name gets a hash of the content, and the Deployment's reference follows, so a change to the settings rolls the pods. |
 | `deployment.yaml` | The Deployment `pi-agent-interface` and its PodDisruptionBudget. |
 | `service.yaml` | A ClusterIP Service `pi-agent-interface` on port 80, to the container's port 8080, with no session affinity: conversations stream through the app, which any replica serves. |
@@ -42,6 +42,7 @@ kubectl apply -k <your overlay>
 - **Two replicas**, a rolling update with `maxSurge: 1` and `maxUnavailable: 0`, spread over nodes (a topology spread on the hostname, `ScheduleAnyway`), and a 30-second termination grace period so open streams can finish. Browsers reconnect to another pod.
 - **Stateless.** The database holds everything the app keeps, so replicas share it. Migrations run when a pod starts, under a PostgreSQL advisory lock, so only one runs and the others wait.
 - **Restricted.** The pod runs as non-root, user and group 1000 (the image's `node` user), with the `RuntimeDefault` seccomp profile, `enableServiceLinks: false` and no service account token. The container has `allowPrivilegeEscalation: false`, `privileged: false`, a **read-only root filesystem** and all capabilities dropped. A 64 MiB `emptyDir` is mounted at `/tmp`.
+- **Waits for its database.** Since v0.3.0 a pod that starts beside its database waits for it, for up to three minutes, instead of exiting and restarting until it answers. The log says `waiting for the database…`. Only "not reachable yet" errors are waited out (connection refused, host unreachable, timeouts, the database starting up, too many connections): a wrong password or a missing database fails at once, with the database's own message. See [PostgreSQL and migrations](/docs/operate/database#waiting-for-the-database).
 - **Resources.** Requests 100m CPU and 192 MiB; limits 1 CPU and 512 MiB.
 
 ### Probes
@@ -52,7 +53,7 @@ kubectl apply -k <your overlay>
 | Readiness | `/readyz` | 5 s | 2 failures |
 | Liveness | `/healthz` | 20 s | 3 failures |
 
-The server listens once the database answers and its migrations are done, which is what the startup probe waits for. `/readyz` needs the database; `/healthz` never checks dependencies, so a database outage takes pods out of the Service but doesn't restart them. Neither calls the agent platform. See [Health](/docs/operate/container#health).
+The server listens once the database answers and its migrations are done, which is what the startup probe waits for: a pod waiting for its database isn't listening yet, so it isn't ready, and isn't sent traffic. `/readyz` needs the database; `/healthz` never checks dependencies, so a database outage takes pods out of the Service but doesn't restart them. Neither calls the agent platform. See [Health](/docs/operate/container#health).
 
 ### The PodDisruptionBudget
 
@@ -107,14 +108,14 @@ This is how the app reaches the agent platform and the identity provider: over h
 
 ### A namespace and an image pin
 
-The base uses the release tag. Pin the digest from the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.2.1), after verifying its signature (see [The container image](/docs/operate/container#getting-the-image)). The digest takes precedence over the tag. Never use `latest`.
+The base uses the release tag. Pin the digest from the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.3.0), after verifying its signature (see [The container image](/docs/operate/container#getting-the-image)). The digest takes precedence over the tag. Never use `latest`.
 
 ```yaml
 namespace: pi-agent-interface
 images:
   - name: ghcr.io/ncecere/pi-agent-interface
-    newTag: v0.2.1
-    digest: sha256:3eb3c21fae4c142f9df686b4b33dc38b0967b2864b8f9f6b2b7f4ee0ec79b01f
+    newTag: v0.3.0
+    digest: sha256:08034bb95172c030564f2ba86428ef7586573a2213e218ee31b0b8090b94fbc8
 ```
 
 </Step>
@@ -148,7 +149,7 @@ configMapGenerator:
 
 ### A PostgreSQL database
 
-CloudNativePG, a managed service, anything. The app migrates it when a pod starts.
+CloudNativePG, a managed service, anything. The app waits for it when a pod starts (up to three minutes), then migrates it.
 
 </Step>
 <Step>

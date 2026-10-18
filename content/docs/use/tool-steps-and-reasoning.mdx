@@ -27,6 +27,8 @@ Screen readers hear each new activity as it starts ("Using get_time…"), once, 
 
 Each step has an icon for the kind of tool, guessed from its name (a terminal for commands, a document for reading files, a pen for writing them, a magnifier for searches, a globe for the web, a clock for times, a wrench for anything else), and what it acted on: the command, the file, the address or the query, for example **get_time · Asia/Tokyo** or **read · src/main.ts**. A spinner shows while it runs, and a failed step is red and ends in **failed**.
 
+A finished step also shows **how long it ran**, at the end of its line: "56 ms", "2.3 s", "12 s", "1m 05s" (milliseconds, seconds, minutes, and hours past an hour). Its tooltip says "How long it ran". The time comes from the start and end times the agent platform records for the call. A platform that doesn't record them shows no time, and the step looks as before.
+
 Opened, a step shows:
 
 - **Input**: a command as `$ command`, simple inputs as names and values, anything else as JSON.

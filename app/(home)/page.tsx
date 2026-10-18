@@ -37,7 +37,7 @@ const sections = [
     title: 'Releases',
     href: '/docs/releases',
     icon: <Tag />,
-    description: `What changed in each release: ${productVersion} is the latest, a patch release after v0.2.0's Connect, admin dashboard and published image.`,
+    description: `What changed in each release: ${productVersion} is the latest: when, which model and how many tokens with each message, how long a tool step ran, and an app that waits for its database.`,
   },
 ];
 

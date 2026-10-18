@@ -44,7 +44,7 @@ services:
       retries: 20
 
   app:
-    image: ghcr.io/ncecere/pi-agent-interface:v0.2.1
+    image: ghcr.io/ncecere/pi-agent-interface:v0.3.0
     depends_on:
       db:
         condition: service_healthy

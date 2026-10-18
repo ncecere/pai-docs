@@ -1,0 +1,20 @@
+---
+title: v0.3.0
+description: "Pi Agent Interface v0.3.0 (2026-10-18): what the platform records shows with each message (when, which model, how many tokens), tool steps show how long they ran, a reply cut at the model's length limit says so, and the app waits for its database when it starts."
+---
+
+**Released 2026-10-18.** Tag [`v0.3.0`](https://github.com/ncecere/pi-agent-interface/tree/v0.3.0) · image `ghcr.io/ncecere/pi-agent-interface:v0.3.0` (`sha256:08034bb95172c030564f2ba86428ef7586573a2213e218ee31b0b8090b94fbc8`) · migrations 1 to 3 (none new).
+
+What the platform now records shows with each message, and the app waits for its database. These docs describe this release.
+
+## Upgrading from 0.2.1
+
+Replace the image and restart. There is no new migration and nothing to change by hand. See [Upgrades and backups](/docs/operate/upgrades-and-backups#from-v021-to-v030). Upgrading from an older version? Read the [v0.2.1](/docs/releases/v0-2-1) and [v0.2.0](/docs/releases/v0-2-0#upgrading-from-010) notes too.
+
+## What's new
+
+- **When, which model, how many tokens.** Hover a message to see when it was sent. Under a finished reply you also see the model that wrote it and the tokens it used (summed over its steps), with the split (in, out, read from cache) in the tooltip. The platform records these from its next release on; against an older platform nothing extra is shown. See [Chatting](/docs/use/chat#when-which-model-and-how-many-tokens).
+- **Tool steps show how long they ran** ("56 ms", "2.3 s"), from the platform's start and end times for the call. See [Tool steps and reasoning](/docs/use/tool-steps-and-reasoning#a-tool-step).
+- **A reply cut off at the model's length limit says so**, so a half-finished answer isn't mistaken for a finished one. See [Chatting](/docs/use/chat#a-reply-cut-short).
+- **The app waits for its database on start** (up to three minutes) instead of exiting and being restarted until the database answers, as happened on a first deployment. Only "not reachable yet" errors are waited out: a wrong password or a missing database still fails at once, with the database's own message. See [PostgreSQL and migrations](/docs/operate/database#waiting-for-the-database) and [Kubernetes](/docs/operate/kubernetes#the-deployment).
+- **Admin → Agents** says, in Connect mode, that the models and templates it lists are the ones the administrator's own workspace offers. See [Agents](/docs/administer/agents).

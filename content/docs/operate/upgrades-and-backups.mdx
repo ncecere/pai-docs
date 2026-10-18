@@ -24,7 +24,7 @@ Take a backup of the app's PostgreSQL (below). Migrations only go forward: going
 
 ### Replace the image and restart
 
-Start the new version with the same configuration. It applies its migrations when it starts, before it listens, and logs them (`[server] database migrated: …`). If a new setting is required, the server stops and names it.
+Start the new version with the same configuration. It waits for its database to answer (up to three minutes; the log says `waiting for the database…`), then applies its migrations before it listens, and logs them (`[server] database migrated: …`). If a new setting is required, the server stops and names it.
 
 </Step>
 </Steps>
@@ -46,6 +46,10 @@ See the [v0.2.0 notes](/docs/releases/v0-2-0#upgrading-from-010) for the rest.
 ### From v0.2.0 to v0.2.1
 
 A patch release: replace the image and restart. There is no new migration and nothing to change by hand. `DEV_ACCOUNTS` is a new, optional, development-only setting. See the [v0.2.1 notes](/docs/releases/v0-2-1).
+
+### From v0.2.1 to v0.3.0
+
+Replace the image and restart. There is no new migration and no new setting. One change to startup: the app now **waits for its database**, for up to three minutes, instead of exiting and being restarted until it answers. Only "not reachable yet" errors are waited out; a wrong password or a missing database still fails at once, with the database's own message. See [PostgreSQL and migrations](/docs/operate/database#waiting-for-the-database) and the [v0.3.0 notes](/docs/releases/v0-3-0).
 
 ## What to back up
 
