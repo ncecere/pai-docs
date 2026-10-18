@@ -1,70 +1,170 @@
 ---
 title: Kubernetes
-description: Notes for running Pi Agent Interface on Kubernetes — a Deployment, a Secret, probes, a restricted security context and an ingress that doesn't buffer event streams.
+description: The Kustomize base in Pi Agent Interface's repository — a two-replica Deployment, probes, a PodDisruptionBudget, default-deny NetworkPolicies and the secret it expects — and what your overlay adds.
 ---
 
-The repository has no Kubernetes manifests or Helm chart. The app is one container with a few needs, so a Deployment, a Service, a Secret and an ingress are enough. These notes cover what matters.
+The product's repository has a generic [Kustomize](https://kustomize.io) base, `deploy/kubernetes/base`, and a README for it (`deploy/kubernetes/README.md`). This page describes the base as it is at v0.2.0. There is no Helm chart.
 
-## Secrets and settings
+The base holds **no secret values, no namespace and no ingress**. Your own overlay supplies those.
 
-Put `PLATFORM_SERVICE_KEY`, `SESSION_SECRET`, `OIDC_CLIENT_SECRET` and `DATABASE_URL` in a Secret, and the rest in the Deployment or a ConfigMap. See [Configuration](/docs/operate/configuration). The server reads them once at start: after changing one, restart the pods.
+## What is in the base
+
+<Files>
+  <Folder name="deploy/kubernetes" defaultOpen>
+    <File name="README.md" />
+    <Folder name="base" defaultOpen>
+      <File name="kustomization.yaml" />
+      <File name="config.env" />
+      <File name="deployment.yaml" />
+      <File name="service.yaml" />
+      <File name="serviceaccount.yaml" />
+      <File name="networkpolicies.yaml" />
+    </Folder>
+  </Folder>
+</Files>
+
+| File | Makes |
+|---|---|
+| `kustomization.yaml` | Lists the resources, generates the ConfigMap, and sets the image to `ghcr.io/ncecere/pi-agent-interface` at tag `v0.2.0`. |
+| `config.env` | The settings in the ConfigMap `pi-agent-interface-config` (below). The name gets a hash of the content, and the Deployment's reference follows, so a change to the settings rolls the pods. |
+| `deployment.yaml` | The Deployment `pi-agent-interface` and its PodDisruptionBudget. |
+| `service.yaml` | A ClusterIP Service `pi-agent-interface` on port 80, to the container's port 8080, with no session affinity: conversations stream through the app, which any replica serves. |
+| `serviceaccount.yaml` | A ServiceAccount with no API token mounted: the app never talks to the Kubernetes API. |
+| `networkpolicies.yaml` | Five NetworkPolicies (below). |
+
+```sh
+kubectl kustomize deploy/kubernetes/base      # render the base
+kubectl apply -k <your overlay>
+```
 
 ## The Deployment
 
+- **Two replicas**, a rolling update with `maxSurge: 1` and `maxUnavailable: 0`, spread over nodes (a topology spread on the hostname, `ScheduleAnyway`), and a 30-second termination grace period so open streams can finish. Browsers reconnect to another pod.
+- **Stateless.** The database holds everything the app keeps, so replicas share it. Migrations run when a pod starts, under a PostgreSQL advisory lock, so only one runs and the others wait.
+- **Restricted.** The pod runs as non-root, user and group 1000 (the image's `node` user), with the `RuntimeDefault` seccomp profile, `enableServiceLinks: false` and no service account token. The container has `allowPrivilegeEscalation: false`, `privileged: false`, a **read-only root filesystem** and all capabilities dropped. A 64 MiB `emptyDir` is mounted at `/tmp`.
+- **Resources.** Requests 100m CPU and 192 MiB; limits 1 CPU and 512 MiB.
+
+### Probes
+
+| Probe | Path | Every | Fails after |
+|---|---|---|---|
+| Startup | `/healthz` | 5 s | 36 failures, so the pod has about 3 minutes to start |
+| Readiness | `/readyz` | 5 s | 2 failures |
+| Liveness | `/healthz` | 20 s | 3 failures |
+
+The server listens once the database answers and its migrations are done, which is what the startup probe waits for. `/readyz` needs the database; `/healthz` never checks dependencies, so a database outage takes pods out of the Service but doesn't restart them. Neither calls the agent platform. See [Health](/docs/operate/container#health).
+
+### The PodDisruptionBudget
+
+`maxUnavailable: 1`, with `unhealthyPodEvictionPolicy: AlwaysAllow`, so a node drain takes one pod at a time and can still evict a pod that isn't ready.
+
+## Settings and secrets
+
+The ConfigMap comes from `config.env`. It holds placeholders that your overlay replaces:
+
+| Key | In the base | Set it to |
+|---|---|---|
+| `APP_URL` | a placeholder | The public https origin, for example `https://chat.example.com`. It must match the ingress host. |
+| `PLATFORM_URL` | a placeholder | The agent platform, https. |
+| `PLATFORM_AUTH` | `connect` | `connect`, or `service` for a platform without Connect (then also `PLATFORM_TEAM`). |
+| `OIDC_ISSUER`, `OIDC_CLIENT_ID` | placeholders | Your identity provider's issuer and client ID. |
+| `DEV_AUTH` | `false` | Leave it. The server refuses it on a non-loopback `APP_URL` anyway. |
+| `INITIAL_ADMIN_EMAIL`, `DISABLED_FEATURES`, `CONNECT_EMAIL_MATCH` | commented out | Optional. See [Configuration](/docs/operate/configuration). |
+
+<Callout type="warn" title="Upgrading a service-account deployment">
+  The base sets `PLATFORM_AUTH=connect`. A deployment that has been using a service key must set `PLATFORM_AUTH=service` in its overlay, with `PLATFORM_TEAM` and the key, or it switches to Connect.
+</Callout>
+
+The Deployment reads secret values from a Secret named **`pi-agent-interface-runtime`**, which your overlay creates:
+
+| Key | Needed | Holds |
+|---|---|---|
+| `DATABASE_URL` | Always | The app's own PostgreSQL. |
+| `SESSION_SECRET` | Always | 32 or more characters (`openssl rand -base64 48`). It encrypts sessions and the platform tokens the app keeps, so changing it signs everyone out and asks everyone to connect again. |
+| `OIDC_CLIENT_SECRET` | Always | The identity provider client's secret. |
+| `PLATFORM_SERVICE_KEY` | Service mode only | The team service account's key. The reference is optional, so Connect mode needs no such key. |
+
+A required key that is missing stops the pod from starting (`CreateContainerConfigError`), rather than starting it half-configured.
+
+## NetworkPolicies
+
+The policies select only the app's own pods, so the base can share a namespace. Once any policy selects a pod, everything not allowed is denied; the first policy makes that explicit.
+
+| Policy | Allows |
+|---|---|
+| `pi-agent-interface-default-deny` | Nothing: denies all ingress and egress for the app's pods. |
+| `pi-agent-interface-ingress` | TCP 8080 from the namespace `ingress-controller` (a placeholder: patch it to your ingress controller's namespace). Kubelet probes aren't affected. |
+| `pi-agent-interface-egress-dns` | DNS (UDP and TCP 53) to `kube-dns` in `kube-system`. |
+| `pi-agent-interface-egress-postgres` | TCP 5432, to anywhere: narrow it to where PostgreSQL runs. |
+| `pi-agent-interface-egress-https` | TCP 443 to public addresses: everything except `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` and `169.254.0.0/16`, so a compromised pod can't reach the cluster's own network or a cloud metadata address through this rule. |
+
+This is how the app reaches the agent platform and the identity provider: over https, on public addresses. If either is on a private address, your overlay needs another egress policy for it. In Connect mode the platform also fetches the app's metadata document, from the app's public address; that is the platform's own egress, and nothing here needs opening.
+
+## What your overlay adds
+
+<Steps>
+<Step>
+
+### A namespace and an image pin
+
+The base uses the release tag. Pin the digest from the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.2.0), after verifying its signature (see [The container image](/docs/operate/container#getting-the-image)). The digest takes precedence over the tag. Never use `latest`.
+
 ```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: pi-agent-interface
-spec:
-  replicas: 1
-  selector:
-    matchLabels: { app: pi-agent-interface }
-  template:
-    metadata:
-      labels: { app: pi-agent-interface }
-    spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
-        seccompProfile: { type: RuntimeDefault }
-      containers:
-        - name: app
-          image: ghcr.io/ncecere/pi-agent-interface@sha256:...   # or your own build
-          ports:
-            - { name: http, containerPort: 8080 }
-          envFrom:
-            - secretRef: { name: pi-agent-interface }
-          env:
-            - { name: APP_URL, value: https://chat.example.com }
-            - { name: PLATFORM_URL, value: https://agents.example.com }
-            - { name: PLATFORM_TEAM, value: pi-agent-interface }
-            - { name: OIDC_ISSUER, value: https://sso.example.com/application/o/pai/ }
-            - { name: OIDC_CLIENT_ID, value: pi-agent-interface }
-          livenessProbe:
-            httpGet: { path: /healthz, port: http }
-          readinessProbe:
-            httpGet: { path: /readyz, port: http }
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities: { drop: [ALL] }
-          resources:
-            requests: { cpu: 100m, memory: 256Mi }
+namespace: pi-agent-interface
+images:
+  - name: ghcr.io/ncecere/pi-agent-interface
+    newTag: v0.2.0
+    digest: sha256:b3d6103ff6a4b0149c301d78aa7a8995c6424b505b5e9a9245d2ccf5e15fb41c
 ```
 
-- **Non-root.** The image runs as `node`, uid 1000. It needs no capabilities, and the server writes nothing to disk, so the root filesystem can be read-only.
-- **Probes.** `/healthz` answers whenever the server is up; `/readyz` also needs the database. Neither calls the agent platform.
-- **Resources.** The request above is a starting point, not a measurement.
+</Step>
+<Step>
 
-## More than one replica
+### Settings
 
-The server keeps no session state of its own (sessions are encrypted cookies) and migrates the database under a PostgreSQL advisory lock, so replicas starting together don't race. Some things are per process, though: the per-person limits on open streams, the connection to the platform's event stream, and the few seconds' caches of people, branding, models and templates. Running more than one replica hasn't been tested; one replica is the tested setup.
+Merge your keys into the ConfigMap:
 
-## The ingress
+```yaml
+configMapGenerator:
+  - name: pi-agent-interface-config
+    behavior: merge
+    literals:
+      - APP_URL=https://chat.example.com
+      - PLATFORM_URL=https://agents.example.com
+      - OIDC_ISSUER=https://sso.example.com/application/o/pai/
+      - OIDC_CLIENT_ID=pi-agent-interface
+      - INITIAL_ADMIN_EMAIL=morgan.lee@example.com
+```
 
-The ingress must not buffer or time out the server-sent event streams (`/api/events` and `/api/agents/*/threads/*/events`). With ingress-nginx:
+</Step>
+<Step>
+
+### The Secret
+
+`pi-agent-interface-runtime`, with the keys above.
+
+</Step>
+<Step>
+
+### A PostgreSQL database
+
+CloudNativePG, a managed service, anything. The app migrates it when a pod starts.
+
+</Step>
+<Step>
+
+### An Ingress or Gateway API route
+
+To the Service `pi-agent-interface`, port 80, with the ingress policy patched to your controller's namespace. The route must not buffer or time out the server-sent event streams, and in Connect mode must leave the metadata document open.
+
+</Step>
+</Steps>
+
+The OpenID Connect redirect URI is `<APP_URL>/auth/callback`.
+
+### The ingress
+
+The route must not buffer or time out the event streams (`/api/events` and `/api/agents/*/threads/*/events`). With ingress-nginx:
 
 ```yaml
 metadata:
@@ -74,7 +174,13 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
 ```
 
+In Connect mode the platform fetches `<APP_URL>/oauth/client-metadata.json` from the app's public address when someone connects. That address must be reachable from the platform and must answer without sign-in and without redirecting, so keep any authentication in front of the ingress away from that path. See [The agent platform](/docs/operate/platform#the-client-id-metadata-document).
+
 Keep `APP_URL` equal to the ingress's public https address. See [Behind a reverse proxy](/docs/operate/container#behind-a-reverse-proxy).
+
+## More than one replica
+
+The base runs two. Everything the app keeps is in the database, and renewals of a person's platform tokens run under a database lock that holds across replicas. A few things are per process: the limits on a person's open streams (so the limit is per pod), the connection to the platform's event stream, and the few seconds' caches of people, branding, models and templates.
 
 ## Lockout recovery
 

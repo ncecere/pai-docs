@@ -1,15 +1,107 @@
 ---
 title: The agent platform
-description: What Pi Agent Interface needs on the Pi Durable platform — a team, an editor service account and a published model — and every call it makes there.
+description: What Pi Agent Interface needs on the Pi Durable platform in Connect mode and in service mode, the app's public metadata document, and every call it makes there.
 ---
 
-Pi Agent Interface is a front end for one team on a [Pi Durable platform](https://github.com/ncecere/pi-durable-platform) (pi-durable-platform). The agents and their conversations live on the platform. People never sign in to the platform: the app's server reaches it for them with the team's **service account** key, set in `PLATFORM_*`, which never leaves the server.
+Pi Agent Interface is a front end for a [Pi Durable platform](https://github.com/ncecere/pi-durable-platform) (pi-durable-platform). The agents and their conversations live on the platform. People sign in to the app, never to the platform; the app's server reaches the platform for them in one of two ways, set by `PLATFORM_AUTH`.
 
-<Callout title="Coming in v0.2.0">
-  People will be able to [connect their own platform account](/docs/use/connect-your-platform-account) instead, so their agents live in their personal workspace. This page describes how the app works today.
+| | **Connect** (`connect`) | **Service account** (`service`) |
+|---|---|---|
+| **Who the app is on the platform** | Each person, with their own token | One team's service account, with its key |
+| **Where agents live** | In each person's **personal workspace**, beside their teams' agents | In one team, one agent per person (`u:<person>`) |
+| **What the platform must offer** | Connect (`connect` in `GET /v1/auth/config`) and personal workspaces | A team, an editor service account and a published model |
+| **Who decides what a person may use** | The platform | The app, with an ownership check on every request |
+| **Admin → Usage** | Locked off ([why](/docs/administer/features#connect-mode)) | Works |
+| **Default** | When `PLATFORM_SERVICE_KEY` is not set | When `PLATFORM_SERVICE_KEY` is set |
+
+`PLATFORM_AUTH` is `connect` or `service`; anything else stops the server ("PLATFORM_AUTH is connect or service"). Without it, the app uses `service` if `PLATFORM_SERVICE_KEY` is set, and `connect` if not. An instance upgraded from v0.1.0 with a service key stays in service mode. See [Configuration](/docs/operate/configuration#the-agent-platform).
+
+The platform must be reached over https (`http://` is accepted only for `localhost`, `127.0.0.1` and `[::1]`).
+
+## Connect mode
+
+People [connect their own platform account](/docs/use/connect-your-platform-account) once, after signing in. The app keeps their tokens encrypted and calls the platform with them. There is nothing to create on the platform for the app, no team and no service account, but the platform has to offer the following.
+
+<Steps>
+<Step>
+
+### Connect, advertised in `GET /v1/auth/config`
+
+The app finds the platform's OAuth endpoints in the `connect` object of the platform's `GET /v1/auth/config` (read without credentials, kept for ten minutes): its issuer, `authorizationEndpoint`, `tokenEndpoint`, and, when it has them, a `revocationEndpoint` and a `registrationEndpoint`. Without `authorizationEndpoint` and `tokenEndpoint`, connecting stops with "The platform doesn't offer Connect (no `connect` in /v1/auth/config)."
+
+The app is a public OAuth client: authorization code with PKCE (S256), the `agents` scope, no client secret.
+
+</Step>
+<Step>
+
+### Personal workspaces turned on
+
+Each person's agents live in their personal workspace, which the platform makes for them at their first sign-in there. If a connected account has none, the app says "Your account on the agent platform has no personal workspace. Ask a platform administrator to turn personal workspaces on."
+
+</Step>
+<Step>
+
+### The app's public address, for its metadata document
+
+The app tells the platform who it is with a **Client ID Metadata Document** at `<APP_URL>/oauth/client-metadata.json`, for example `https://chat.example.com/oauth/client-metadata.json`. That URL is the app's client ID. See below.
+
+</Step>
+</Steps>
+
+### The Client ID Metadata Document
+
+The document is served by the app itself, without sign-in, and says:
+
+| Field | Value |
+|---|---|
+| `client_id` | The document's own URL |
+| `client_name` | The app's name, from [Branding](/docs/administer/branding), which the platform shows on its approval screen and in **Connected apps** |
+| `client_uri` | `APP_URL`'s origin |
+| `logo_uri` | `<APP_URL>/icon-192.png` |
+| `redirect_uris` | `<APP_URL>/connect/callback` |
+| `grant_types`, `response_types`, `token_endpoint_auth_method`, `scope` | `authorization_code` and `refresh_token`, `code`, `none`, `agents` |
+
+**The platform fetches the document from the app's public address**, and expects an https URL that answers **200**, with **`application/json`**, and **no redirects**. So nothing may sit in front of `/oauth/client-metadata.json` that asks for a login or redirects: not single sign-on, not a Pangolin resource rule, not an authenticating reverse proxy. Exclude that path (and `/icon-192.png`, for the logo) from any such rule. You can check it from outside your network:
+
+```sh
+curl -i https://chat.example.com/oauth/client-metadata.json
+```
+
+It should answer `200` with `Content-Type: application/json` and the fields above, not a `301`, `302` or a sign-in page. The app lets it be cached for ten minutes.
+
+A platform administrator may mark the app **trusted** in the platform. Then people skip the approval screen when they connect; without it they see it once.
+
+<Callout title="On a local address">
+  The document only works on an https `APP_URL`. On a loopback `http` address, such as `http://localhost:5177` in development, the app **registers itself** with the platform instead, through the `registrationEndpoint` in `GET /v1/auth/config`. It keeps the client it gets in its database and registers again if the platform has forgotten it (unused for 30 days) or the platform or `APP_URL` changed. A platform without a `registrationEndpoint` can't be used from a local address: "The platform has no client registration, and this app is not on https (it needs one or the other)."
 </Callout>
 
-## What to set up on the platform
+### How a connection is kept
+
+The app keeps each person's access and refresh tokens in its database, encrypted (see [Security](/docs/operate/security#platform-tokens-connect-mode)). In brief:
+
+- It renews the access token about two minutes before it runs out. The platform rotates the refresh token on every use, so renewals for one person run **one at a time**, under a PostgreSQL lock that holds across replicas. A request that finds the token already renewed uses the new one.
+- If the platform answers a request with 401, the app renews once and tries again. A second 401, or a renewal the platform refuses (`invalid_grant`, or `invalid_client`), means the connection is over: the app forgets it and the person is asked to connect again.
+- Any other failure to renew is reported as the platform's error, and the connection is kept.
+- **Disconnect**, and an account the [account check](/docs/operate/security#the-account-check-connect-mode) refuses, ask the platform to revoke the refresh token (best effort).
+
+### Troubleshooting Connect
+
+| What people see, or the log says | Check |
+|---|---|
+| Selecting **Connect** ends on an error page from the platform | The platform may not be able to read the metadata document. Run the `curl` above from outside; look for a redirect or a login in front of the app. |
+| "The platform doesn't offer Connect (no `connect` in /v1/auth/config)." | The platform is too old, or Connect is off there. |
+| "Your account on the agent platform has no personal workspace. …" | Personal workspaces are off on the platform. |
+| "The platform has no client registration, and this app is not on https …" | A local `APP_URL`, and the platform offers no registration. |
+| "The platform refused to register this app: …" | The platform's reason follows. |
+| "You connected *a* on the agent platform, but you're signed in here as *b*. …" | The [account check](/docs/operate/security#the-account-check-connect-mode). |
+| `[agents] provided agent "…" uses a template that isn't in the platform's catalog; personal workspaces can't deploy it` | A provided agent's template isn't in the platform's catalog. See [Agents](/docs/administer/agents#provided-agents). |
+| Everyone is asked to connect again | `SESSION_SECRET` was changed, so the stored tokens can't be read. |
+
+The server's log lines start with `[connect]` and `[agents]`.
+
+## Service mode
+
+For a platform without Connect. The app reaches everyone's agents with one team's **service account** key, set in `PLATFORM_TEAM` and `PLATFORM_SERVICE_KEY`, which never leave the server.
 
 <Steps>
 <Step>
@@ -35,9 +127,7 @@ At least one model published to the team. Name it in `AGENT_MODEL` (by name or i
 </Step>
 </Steps>
 
-The platform must be reached over https, because the key travels with every request (`http://` is accepted only for `localhost`, `127.0.0.1` and `[::1]`). See [Configuration](/docs/operate/configuration#the-agent-platform).
-
-## How people are kept apart
+### How people are kept apart in service mode
 
 The service key can reach every person's agents, so the app checks, on every request that names an agent, that the agent is the signed-in person's own. Each agent the app makes has an **external key** that names its person:
 
@@ -52,6 +142,39 @@ The service key can reach every person's agents, so the app checks, on every req
 These are **service-managed** agents: only the team's service accounts talk to them. The team's owners and admins see them in the platform's console, named "*Assistant* · *Priya Shah*" with the person's email in the description, with their status and last use, but not their conversations, and can disable or delete them.
 
 ## What the app calls
+
+### In Connect mode
+
+Every call to the platform after sign-in carries `Authorization: Bearer <the person's access token>`. `{team}` is the slug of the person's personal workspace.
+
+| Call | When |
+|---|---|
+| `GET /v1/auth/config` | The platform's OAuth endpoints, no credentials (kept ten minutes). |
+| The `registrationEndpoint` | Only on a local `http` address: registers the app. |
+| The `authorizationEndpoint` | The person's browser is sent here when they select **Connect**. |
+| The `tokenEndpoint` | Exchanges the code for tokens, and renews them. |
+| The `revocationEndpoint` | **Disconnect** and a refused account: revokes the refresh token. |
+| `GET /v1/me` | Right after connecting: which platform account it is, for the account check and Settings. |
+| `GET /v1/teams` | Finds the person's personal workspace (kept five minutes). |
+| `GET /v1/teams/{team}/models` | The models the workspace may use (five minutes). |
+| `GET /v1/agent-templates` | The platform's catalog of templates: what people may make agents from, and the provided agents' templates. |
+| `GET /v1/agents` | Every agent the person may use: their workspace's and their teams'. |
+| `POST /v1/teams/{team}/agents` | Makes a provided agent's copy, or an agent the person makes. |
+| `GET /v1/teams/{team}/limits` | Before making an agent: the workspace's agent limit (`maxAgents`). |
+| `GET /v1/agents/{agent}` | Reads an agent, before renaming or deleting it. |
+| `PATCH /v1/agents/{agent}` | Renames an agent or moves it to another model, with its revision in `If-Match`. |
+| `DELETE /v1/agents/{agent}` | Deletes one of the person's own agents and its conversations. |
+| `GET /v1/agents/{agent}/threads` | Lists an agent's conversations. |
+| `GET`, `PATCH`, `DELETE /v1/agents/{agent}/threads/{thread}` | Reads, renames or deletes a conversation. |
+| `POST /v1/agents/{agent}/threads/{thread}/messages` | Sends a message (with a `requestId`, so a retried send isn't sent twice). The first message of a conversation with a team's agent asks for it to be private. |
+| `POST /v1/agents/{agent}/threads/{thread}/stop` | Stops a reply. |
+| `GET /v1/agents/{agent}/threads/{thread}/events` | Follows one open conversation (server-sent events). |
+| `GET /v1/agents/events` | One connection **per person**, with their own token, open while they have the app open (it closes a minute after their last tab), that says when conversations are created, renamed, start or finish a reply, or are deleted. |
+| `GET /v1/teams/{team}/usage` | The person's own usage, for Settings → Usage. |
+
+Conversation requests are relayed as they are, with the platform's answers passed back. The platform decides what the person may see and do, so a refusal is the platform's.
+
+### In service mode
 
 Every request carries `Authorization: Bearer <PLATFORM_SERVICE_KEY>`. `{team}` is `PLATFORM_TEAM`.
 
@@ -72,9 +195,10 @@ Every request carries `Authorization: Bearer <PLATFORM_SERVICE_KEY>`. `{team}` i
 | `GET /v1/agents/events` | One connection for the whole server, open while anyone has the app open (it closes a minute after the last person leaves), that says when conversations are created, renamed, start or finish a reply, or are deleted. |
 | `GET /v1/teams/{team}/usage` | The usage report, for [Admin → Usage](/docs/administer/usage) and Settings → Usage. |
 
-Conversation requests are relayed as they are, with the platform's answers passed back. If the platform refuses the key (401 or 403), people see "The agent platform refused this app's service key." and the server's log says so; if it can't be reached, "The agent platform could not be reached."
+If the platform refuses the key (401 or 403), people see "The agent platform refused this app's service key." and the server's log says so. In both modes, if the platform can't be reached, people see "The agent platform could not be reached."
 
 ## Load on the platform
 
+- Listing an agent's conversations (for the inbox, and the start page's **Recent with** list) doesn't wake the agent. The platform answers it without starting the agent's runtime.
 - An open conversation keeps its agent awake. A conversation in a tab that has been hidden for a minute, with the agent idle, lets go so the agent can hibernate.
 - One person can have at most 8 conversations open at once (each a stream to the platform) and 6 tabs following their inbox. See [Security](/docs/operate/security#limits).

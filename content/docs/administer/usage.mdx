@@ -5,6 +5,10 @@ description: How much each person's agents use their models in Pi Agent Interfac
 
 **Admin → Usage** shows how much each person's agents use their models over the last **7 days**, **30 days** or **90 days**. It is an [optional feature](/docs/administer/features), **Usage**, on by default; while it is off, the page isn't in the admin page list.
 
+<Callout type="warn" title="Not in Connect mode">
+  In Connect mode this page is locked off: people's agents are in their own personal workspaces, which administrators don't see, so there is no team report to read. [Features](/docs/administer/features#connect-mode) shows the reason. Everyone can still see their own usage in Settings → Usage if **Personal usage** is on. The rest of this page is about service mode.
+</Callout>
+
 <Screenshot slot="admin-usage" />
 
 The page opens with **Requests**, **Tokens** (in and out), **Estimated cost** and **People** whose agents were used, then **Tokens per day** as bars, then a table **By person**: **Agents** used, **Requests**, **Tokens in**, **Tokens out** and **Est. cost**, the heaviest users first.

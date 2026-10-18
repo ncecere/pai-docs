@@ -31,16 +31,24 @@ Start the new version with the same configuration. It applies its migrations whe
 
 People's conversations aren't affected: they live on the platform. Sessions carry on across an upgrade unless the release notes say otherwise.
 
-### From v0.1.0
+### From v0.1.0 to v0.2.0
 
-v0.1.0 had no database. The version on `main` needs one: set `DATABASE_URL` (see [PostgreSQL and migrations](/docs/operate/database)), and set `INITIAL_ADMIN_EMAIL` so the instance gets its [first administrator](/docs/administer/first-administrator). See the [Unreleased notes](/docs/releases/unreleased#upgrading-from-v010) for the rest.
+- **A database is now required.** v0.1.0 had none. Set `DATABASE_URL` to an empty PostgreSQL database (see [PostgreSQL and migrations](/docs/operate/database)); the first pod to start applies migrations 1 to 3. Set `INITIAL_ADMIN_EMAIL` so the instance gets its [first administrator](/docs/administer/first-administrator).
+- **A deployment with `PLATFORM_SERVICE_KEY` set stays in service mode**, as before: nothing to change, and each person's assistant is kept, with its conversations. **Without a service key, the app now defaults to Connect** (`PLATFORM_AUTH=connect`). To keep using a service account, set `PLATFORM_AUTH=service`. The Kubernetes base sets `PLATFORM_AUTH=connect`, so a service-mode overlay must set it back.
+- **Moving to Connect** is a choice, not part of the upgrade. In Connect mode people's agents live in their personal workspaces on the platform, so they start with new copies of the provided agents there. The agents made in service mode stay in the team on the platform, and the app doesn't move conversations between the two. Check first that the platform offers Connect and that the app's `/oauth/client-metadata.json` is reachable by it, as described in [The agent platform](/docs/operate/platform#connect-mode).
+- **Everyone signs in again once**: sessions now carry a session version, and v0.1.0's sessions end.
+- `AGENT_MODEL` is now only the fallback default: [Admin → Agents](/docs/administer/agents) sets the default model and wins.
+- **The image no longer contains npm, corepack or yarn**, and is now published and signed. See [The container image](/docs/operate/container#getting-the-image).
+- New settings: `PLATFORM_AUTH`, `CONNECT_EMAIL_MATCH`, `DISABLED_FEATURES`, `DATABASE_URL`, `INITIAL_ADMIN_EMAIL`.
+
+See the [v0.2.0 notes](/docs/releases/v0-2-0#upgrading-from-010) for the rest.
 
 ## What to back up
 
 | What | Where | Why |
 |---|---|---|
-| **The app's database** | PostgreSQL, `DATABASE_URL` | People and roles, instance settings (branding, agent settings, provided agents, features), everyone's preferences and inbox state, the names of people's own agents, and the audit log. |
-| **The configuration** | Your environment or secret store | Especially `SESSION_SECRET`, `PLATFORM_SERVICE_KEY` and `OIDC_CLIENT_SECRET`. |
+| **The app's database** | PostgreSQL, `DATABASE_URL` | People and roles, instance settings (branding, agent settings, provided agents, features), everyone's preferences and inbox state, the audit log, the names of people's own agents (service mode), and in Connect mode each person's encrypted platform tokens and which agent is their copy of each provided agent. |
+| **The configuration** | Your environment or secret store | Especially `SESSION_SECRET`, `OIDC_CLIENT_SECRET` and, in service mode, `PLATFORM_SERVICE_KEY`. In Connect mode `SESSION_SECRET` also opens the stored platform tokens: a database restored with a different one means everyone connects again. |
 | **The agent platform** | The platform's own database and agent storage | The agents, their memory and every conversation. Back it up as its own documentation says. |
 
 Back up the database with your usual PostgreSQL tools, for example:
@@ -54,8 +62,8 @@ Restore into a stopped app, then start it.
 
 ### What a lost database means
 
-The agents and conversations survive on the platform, and each person's agents are found again by their key when they next sign in. What is lost: roles (everyone is a member again, so set `INITIAL_ADMIN_EMAIL` or use [`admin:promote`](/docs/administer/first-administrator#locked-out-adminpromote) after people sign in), instance settings, preferences and inbox state, the audit log, and the list of people's own agents (their agents stay on the platform but no longer show in the app).
+The agents and conversations survive on the platform. In service mode each person's agents are found again by their key when they next sign in. In Connect mode each person connects again, and the app finds their agents in their personal workspace; a provided agent's copy already there under its name is adopted, not made again. What is lost: roles (everyone is a member again, so set `INITIAL_ADMIN_EMAIL` or use [`admin:promote`](/docs/administer/first-administrator#locked-out-adminpromote) after people sign in), instance settings, preferences and inbox state, the audit log, and, in service mode, the list of people's own agents (their agents stay on the platform but no longer show in the app).
 
 ### What a lost `SESSION_SECRET` means
 
-Only that everyone signs in again. Set a new one.
+Everyone signs in again, and in Connect mode everyone connects again, since the stored tokens can't be read without it. Set a new one.

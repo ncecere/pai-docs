@@ -1,0 +1,65 @@
+---
+title: v0.2.0
+description: "Pi Agent Interface v0.2.0 (2026-10-18): people connect their own agent platform account, plus an admin dashboard, settings, agents people can make, a live inbox, a Kubernetes base and a published, signed container image."
+---
+
+**Released 2026-10-18.** Tag [`v0.2.0`](https://github.com/ncecere/pi-agent-interface/tree/v0.2.0) · image `ghcr.io/ncecere/pi-agent-interface:v0.2.0` (`sha256:b3d6103ff6a4b0149c301d78aa7a8995c6424b505b5e9a9245d2ccf5e15fb41c`) · migrations 1 to 3.
+
+People connect their own agent platform account, and the app gains an administration area, settings, agents people can make and a live inbox. It also gets its own logo, site and documentation. These docs describe this release.
+
+## Upgrading from 0.1.0
+
+- **A database is now required.** v0.1.0 had none. Set `DATABASE_URL`; the server creates its tables when a pod starts (migrations 1 to 3, in [PostgreSQL and migrations](/docs/operate/database)). Set `INITIAL_ADMIN_EMAIL` for the first administrator.
+- **A deployment with `PLATFORM_SERVICE_KEY` set stays in service mode, as before.** Without a service key the app now defaults to Connect (`PLATFORM_AUTH=connect`). Set `PLATFORM_AUTH=service` to keep using a service account.
+- `AGENT_MODEL` is now only the fallback default: [Admin → Agents](/docs/administer/agents) sets the default model and wins.
+- **The image no longer contains npm, corepack or yarn.**
+- New settings: `PLATFORM_AUTH`, `CONNECT_EMAIL_MATCH`, `DISABLED_FEATURES`, `DATABASE_URL`, `INITIAL_ADMIN_EMAIL`. See [Configuration](/docs/operate/configuration).
+- Everyone signs in again once: sessions now carry a session version.
+- Each person's assistant is kept in service mode: it has the same key on the platform (`u:<person>`) and becomes their built-in provided agent, with its conversations.
+
+See [Upgrades and backups](/docs/operate/upgrades-and-backups#from-v010-to-v020).
+
+## Connecting to the platform
+
+- **OAuth Connect** (`PLATFORM_AUTH=connect`): after signing in, a person connects their own account on the agent platform once, and their agents live in their personal workspace beside their teams' agents. The server keeps their tokens encrypted (renewals run one at a time per person), calls the platform with them, and asks them to connect again if the connection ends. **Settings → Account** shows the connection, with **Disconnect**. See [Connecting your platform account](/docs/use/connect-your-platform-account).
+- The app identifies itself with a Client ID Metadata Document at `/oauth/client-metadata.json`, which the platform fetches from the app's public address. On a local `http` address it registers itself instead. See [The agent platform](/docs/operate/platform#connect-mode).
+- A platform account whose email differs from the person's is refused and its tokens revoked, unless `CONNECT_EMAIL_MATCH=off`. See [Security](/docs/operate/security#the-account-check-connect-mode).
+- A conversation with a team's agent starts private to the person (the platform fixes visibility with the first message).
+- Service mode is unchanged. **Admin → Usage** needs it, since people's agents in Connect mode aren't in a team the administrators see. See [Features](/docs/administer/features#connect-mode).
+
+## Agents
+
+- **Admin → Agents**: the default model, how many agents each person may make (default 5), whether people choose the model, and the allowed templates. See [Agents](/docs/administer/agents).
+- **Provided agents**: administrators add agents everyone gets, each person their own private copy (the built-in assistant is the first). In Connect mode a copy is made once per person in their workspace; one already there under its name is adopted, not duplicated.
+- **My agents** (Settings): people make their own agents from the allowed templates, rename them, move them to another model, and delete them. The agent picker groups **Provided**, **Yours** and each team. See [Agents](/docs/use/agents).
+
+## Inbox
+
+- **A new look**: three-line rows (agent, title, time), the status in the corner with an icon (**Working** with a timer, **Done**, **Failed**, **Woke**), a pin on pinned rows, compact times, soft hover and active tints, and hover actions **Pin**, **Snooze** and **Settle**. "Done" means a finished reply you haven't seen; conversations you are finished with are **Settled**. Snoozing shows each wake time and offers **Custom…**. **Rename…** a conversation from its menu.
+- **Live from the platform**: one event stream per person updates conversation lists as they change on any device, and the platform's own status drives **Working**, **Done** and **Failed**. Replies that finish while the app is closed show as **Done** when you come back. Polling only runs while the stream is down. Listing conversations no longer wakes agents.
+- **It follows you between devices**: pinned, snoozed, settled, archived and read state is saved to your account.
+- **Shortcuts**: ⌥↑ and ⌥↓ previous and next conversation, ⌥⇧↓ next that needs you, ⌥⇧S settle and move on, ⌥⇧P pin, ⌥⇧U mark unread (Alt on Windows and Linux; listed in Settings). Right-click a row for its menu. See [Keyboard shortcuts](/docs/use/keyboard-shortcuts#in-the-inbox).
+- A resizable sidebar, with a live timer while an agent works.
+
+## Chat
+
+- **Tool steps**: an icon for the kind of tool, a spinner while it runs, red when it fails, and what it acted on. While the agent works, its latest steps show under the header. Opened, a step shows a command as `$ command`, inputs as name and value, JSON output indented, and **Copy**. See [Tool steps and reasoning](/docs/use/tool-steps-and-reasoning).
+- **Failed replies say why in plain words**, with the provider's raw error under **Details**. A turn the agent drops without replying shows **Failed** and a **No reply.** note with **Try again**.
+- Conversations open at their latest message, long messages you send fold, live labels shimmer, and narrow no-break spaces some models write no longer squash words together.
+
+## Administration and settings
+
+- **Admin** (`/admin`, in Open Chat Interface's layout): **Overview**, **People** (search, make administrator or member, suspend or restore), **Agents**, **Branding** (name, logo, default accent and appearance), **Features**, **Usage** and the **Audit log**. `INITIAL_ADMIN_EMAIL` makes the first administrator; `pnpm admin:promote <email>` recovers from a lockout. There is always at least one active administrator. See [Administer](/docs/administer).
+- **Settings** (`/settings`): **Account**, **Customization** (light, dark or system, accent, avatar style, Enter behaviour, code wrapping), **My agents**, **Conversations** and, when on, **Usage**. Appearance is saved to your account. See [Settings](/docs/use/settings).
+- **Optional features** (Admin → Features): parts of the app an instance can do without, enforced by the server and hidden in the browser when off; `DISABLED_FEATURES` turns one off for good. **Usage** (Admin → Usage, on by default) shows requests, tokens and an estimated cost per person; **Personal usage** (Settings → Usage, off by default) shows each person their own.
+
+## Look and release
+
+- A new logo, "Face", and the default name **Pi Agent Interface**.
+- A Kubernetes base in `deploy/kubernetes/` (see [Kubernetes](/docs/operate/kubernetes)), CI, and a release workflow that builds a signed multi-architecture image at `ghcr.io/ncecere/pi-agent-interface` (see [The container image](/docs/operate/container#getting-the-image)).
+- Fixed: on a shared browser, the next person to sign in inherited the previous person's theme and avatar style.
+
+## Known limitations
+
+- Single sign-on is tested against an in-process provider, not against a particular identity provider.
+- No access control by identity-provider group: restrict who may sign in in your provider.

@@ -7,25 +7,33 @@ Pi Agent Interface ships as one container image: one Node.js 22 process that ser
 
 ## Getting the image
 
-No image has been published yet. The repository's release workflow (`.github/workflows/image.yml`) publishes `ghcr.io/ncecere/pi-agent-interface` for release tags: a multi-arch image (linux/amd64 and linux/arm64), scanned for vulnerabilities, with SBOM and provenance attestations, tagged `vX.Y.Z` (and `latest` for final releases) and signed with cosign keyless signing. Until a release has been published there, build it from the repository:
+Since v0.2.0 the image is published: `ghcr.io/ncecere/pi-agent-interface`. The repository's release workflow (`.github/workflows/image.yml`) builds it for each release tag as a **multi-arch** image (linux/amd64 and linux/arm64), scans it for vulnerabilities, attaches SBOM and provenance attestations, tags it `vX.Y.Z` (and `latest` for final releases) and **signs** it with cosign keyless signing. The v0.2.0 image is:
+
+```text
+ghcr.io/ncecere/pi-agent-interface:v0.2.0
+ghcr.io/ncecere/pi-agent-interface@sha256:b3d6103ff6a4b0149c301d78aa7a8995c6424b505b5e9a9245d2ccf5e15fb41c
+```
+
+The digest is also on the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.2.0). A tag can move, so check the signature before you deploy, and deploy by digest:
+
+```sh
+cosign verify ghcr.io/ncecere/pi-agent-interface@sha256:b3d6103ff6a4b0149c301d78aa7a8995c6424b505b5e9a9245d2ccf5e15fb41c \
+  --certificate-identity https://github.com/ncecere/pi-agent-interface/.github/workflows/image.yml@refs/tags/v0.2.0 \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+The identity names the workflow and the release tag that built the image, so for another release only the tag at its end changes. To build it yourself instead:
 
 ```sh
 git clone https://github.com/ncecere/pi-agent-interface.git
 cd pi-agent-interface
+git checkout v0.2.0
 docker build -t pi-agent-interface .
-```
-
-Once releases are published, check the signature before you deploy, and deploy by digest:
-
-```sh
-cosign verify ghcr.io/ncecere/pi-agent-interface:vX.Y.Z \
-  --certificate-identity https://github.com/ncecere/pi-agent-interface/.github/workflows/image.yml@refs/tags/vX.Y.Z \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
 ## What is in it
 
-The build stage installs the dependencies with pnpm, type-checks, builds the web app (`dist/`, without source maps) and the server (`dist-server/`), and keeps only the server's run-time dependencies. The image is `node:22-slim` with:
+The build stage installs the dependencies with pnpm, type-checks, builds the web app (`dist/`, without source maps) and the server (`dist-server/`), and keeps only the server's run-time dependencies. The image is `node:22-slim`, with the operating system's security updates applied and **no npm, npx, corepack or yarn**: nothing in it runs them, and their bundled packages were the image's only Node findings in a vulnerability scan. Use `node` for everything, for example the recovery command below. It has:
 
 | | |
 |---|---|
@@ -46,12 +54,14 @@ docker run -d --name pai \
   pi-agent-interface
 ```
 
-See [Configuration](/docs/operate/configuration) for `pai.env`. The server writes nothing to disk, so it runs with a read-only root filesystem. On start it migrates the database, then listens, and logs where:
+See [Configuration](/docs/operate/configuration) for `pai.env`. The server writes nothing to disk, so it runs with a read-only root filesystem (the release workflow checks the image by running it with `--read-only`), as the `node` user. On start it migrates the database, then listens, and logs where:
 
 ```text
-[server] database migrated: 1, 2
+[server] database migrated: 1, 2, 3
 [server] http://0.0.0.0:8080 for https://chat.example.com · platform https://agents.example.com · team pi-agent-interface · single sign-on
 ```
+
+The `database migrated` line appears only when a migration was applied. The `team` part is the service-mode team, and is empty in Connect mode.
 
 On SIGTERM or SIGINT it stops accepting connections and waits for open ones to end before closing its database connections and exiting. Event streams stay open, so with people connected the process is usually ended by the container runtime's stop timeout instead. Nothing is lost: conversations live on the platform, and browsers reconnect on their own.
 
@@ -70,6 +80,7 @@ Put a reverse proxy or ingress in front that terminates TLS, and:
 
 - **Doesn't buffer or time out the event streams.** `/api/events` (the inbox) and `/api/agents/*/threads/*/events` (an open conversation) are server-sent event streams that stay open. The app sends `X-Accel-Buffering: no` and a keep-alive comment on `/api/events` every 15 seconds; the platform sends one every 15 seconds on conversation streams. Set the read timeout to an hour or more.
 - **Passes `Host` and `X-Forwarded-*` through**, and keeps `APP_URL` equal to the public address. Writes are refused unless the browser's `Origin` is `APP_URL`'s origin.
+- **Leaves `/oauth/client-metadata.json` open** in Connect mode. The platform fetches it from the app's public address, and needs a plain `200` with `application/json`: no sign-in, no redirect. See [The agent platform](/docs/operate/platform#the-client-id-metadata-document).
 
 For nginx:
 

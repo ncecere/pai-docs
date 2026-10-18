@@ -14,7 +14,7 @@ Pi Agent Interface reads its configuration from environment variables once, when
   ```text
   Error: Configuration:
     - SESSION_SECRET must be at least 32 characters
-    - PLATFORM_SERVICE_KEY is required
+    - DATABASE_URL is required
     - APP_URL must use https outside local development
   ```
 
@@ -32,16 +32,18 @@ A **loopback** address below means a URL whose host is `localhost`, `127.0.0.1` 
 
 ## The agent platform
 
-See [The agent platform](/docs/operate/platform) for what to set up there.
+See [The agent platform](/docs/operate/platform) for the two modes and what to set up on the platform.
 
 | Variable | Default | Checked |
 |---|---|---|
-| `PLATFORM_URL` | none (required) | The platform's address, for example `https://agents.example.com`. Must be a URL, and https unless it is loopback ("PLATFORM_URL must use https (the service key travels with every request)"). |
-| `PLATFORM_TEAM` | none (required) | The team's slug, for example `pi-agent-interface`. Required ("PLATFORM_TEAM is required"); its value isn't checked until the first call. |
-| `PLATFORM_SERVICE_KEY` (secret) | none (required) | The team service account's key, `pdp_sa_…`, role editor. Required; never sent to browsers. A wrong key shows up at the first call, as "The agent platform refused this app's service key." |
-| `AGENT_TEMPLATE` | empty | The slug of the platform template the built-in assistant (and any provided agent left on **The default template**) is made from. Empty: the platform's default. Not checked at start. |
+| `PLATFORM_URL` | none (required) | The platform's address, for example `https://agents.example.com`. Must be a URL, and https unless it is loopback ("PLATFORM_URL must use https (the service key travels with every request)"; the message is the same in Connect mode, where people's tokens travel instead). |
+| `PLATFORM_AUTH` | `service` if `PLATFORM_SERVICE_KEY` is set, else `connect` | How the app reaches people's agents. **`connect`**: each person connects their own platform account, and their agents live in their personal workspace. **`service`**: one team service account, for a platform without Connect. Anything else: "PLATFORM_AUTH is connect or service". A deployment from v0.1.0 that has a service key stays in service mode. |
+| `CONNECT_EMAIL_MATCH` | `require` | Connect mode only. `require` refuses a platform account whose email differs from the person's email here (see [the account check](/docs/operate/security#the-account-check-connect-mode)); `off` skips the check, for deployments whose app and platform use different identity providers. Anything else: "CONNECT_EMAIL_MATCH is require or off". |
+| `PLATFORM_TEAM` | none | **Service mode only**: the team's slug, for example `pi-agent-interface`. Required there ("PLATFORM_TEAM is required"); its value isn't checked until the first call. Not used in Connect mode, where it needs no value. |
+| `PLATFORM_SERVICE_KEY` (secret) | none | **Service mode only**: the team service account's key, `pdp_sa_…`, role editor. Required there; never sent to browsers. A wrong key shows up at the first call, as "The agent platform refused this app's service key." Setting it without `PLATFORM_AUTH` selects service mode. Not used in Connect mode. |
+| `AGENT_TEMPLATE` | empty | The slug of the platform template the built-in assistant (and any provided agent left on **The default template**) is made from. Empty: the platform's default. In Connect mode it is looked up in the platform's catalog, and a slug that isn't there leaves the agent on the platform's default template. Not checked at start. |
 | `AGENT_NAME` | `Assistant` | The built-in assistant's name until an administrator renames it in Admin → Agents. |
-| `AGENT_MODEL` | empty | The default model, by name or id, until an administrator picks one in Admin → Agents (which wins). Only a model currently published to the team and enabled is ever set; if it isn't one, agents are left on their model and the log says so once. Empty: the platform decides (the template's model, then its default). |
+| `AGENT_MODEL` | empty | The default model, by name or id, until an administrator picks one in Admin → Agents (which wins). Only a model currently published to the team (in Connect mode, one the person's personal workspace may use) and enabled is ever set; if it isn't one, agents are left on their model and the log says so once. Empty: the platform decides (the template's model, then its default). |
 
 ## Sign-in
 
@@ -59,7 +61,7 @@ At least one way to sign in is required: OIDC, or `DEV_AUTH` on a loopback `APP_
 
 | Variable | Default | Checked |
 |---|---|---|
-| `SESSION_SECRET` (secret) | none (required) | At least 32 characters ("SESSION_SECRET must be at least 32 characters"); generate one with `openssl rand -base64 48`. Encrypts session cookies. Changing it signs everyone out; nothing else depends on it. |
+| `SESSION_SECRET` (secret) | none (required) | At least 32 characters ("SESSION_SECRET must be at least 32 characters"); generate one with `openssl rand -base64 48`. Encrypts session cookies and, in Connect mode, the platform tokens the app keeps for people. Changing it signs everyone out, and in Connect mode everyone has to connect again, since the stored tokens can't be read any more. |
 | `SESSION_TTL_HOURS` | `168` (7 days) | How long a session lasts, in hours. A value that isn't a positive number is silently replaced by 168. A session isn't extended by use: people sign in again when it ends. |
 
 ## Database and administration
@@ -68,7 +70,7 @@ At least one way to sign in is required: OIDC, or `DEV_AUTH` on a loopback `APP_
 |---|---|---|
 | `DATABASE_URL` (secret) | none (required) | The app's own PostgreSQL, for example `postgres://pai:…@db.example.com:5432/pai`. Required; a wrong one fails when the server connects, before it listens. Migrated on start. See [PostgreSQL and migrations](/docs/operate/database). |
 | `INITIAL_ADMIN_EMAIL` | none | Becomes an administrator on signing in, while there is no active administrator. See [The first administrator](/docs/administer/first-administrator). |
-| `DISABLED_FEATURES` | empty | Optional features to turn off for good, comma-separated: `usage`, `myUsage` (case-sensitive). An unknown name stops the server (`DISABLED_FEATURES: there is no feature "…" (known: usage, myUsage)`). See [Features](/docs/administer/features). |
+| `DISABLED_FEATURES` | empty | Optional features to turn off for good, comma-separated: `usage`, `myUsage` (case-sensitive). An unknown name stops the server (`DISABLED_FEATURES: there is no feature "…" (known: usage, myUsage)`). In Connect mode `usage` is off whatever this says. See [Features](/docs/administer/features). |
 
 ## Set by the image
 
@@ -76,9 +78,26 @@ The container image sets `NODE_ENV=production`, `HOST=0.0.0.0`, `PORT=8080` and 
 
 ## A production example
 
+In Connect mode, the default, there is no team or key to set:
+
 ```sh title="pai.env"
 APP_URL=https://chat.example.com
 PLATFORM_URL=https://agents.example.com
+PLATFORM_AUTH=connect
+DATABASE_URL=postgres://pai:...@db.example.com:5432/pai
+SESSION_SECRET=...            # openssl rand -base64 48
+OIDC_ISSUER=https://sso.example.com/application/o/pai/
+OIDC_CLIENT_ID=pi-agent-interface
+OIDC_CLIENT_SECRET=...
+INITIAL_ADMIN_EMAIL=morgan.lee@example.com
+```
+
+For a platform without Connect, with a team service account:
+
+```sh title="pai.env"
+APP_URL=https://chat.example.com
+PLATFORM_URL=https://agents.example.com
+PLATFORM_AUTH=service
 PLATFORM_TEAM=pi-agent-interface
 PLATFORM_SERVICE_KEY=pdp_sa_...
 AGENT_MODEL=Chat model
@@ -89,3 +108,5 @@ OIDC_CLIENT_ID=pi-agent-interface
 OIDC_CLIENT_SECRET=...
 INITIAL_ADMIN_EMAIL=morgan.lee@example.com
 ```
+
+In Connect mode the platform fetches `<APP_URL>/oauth/client-metadata.json` from the app's public address, so that path must be reachable without sign-in. See [The agent platform](/docs/operate/platform#the-client-id-metadata-document). For local development with Connect, add `CONNECT_EMAIL_MATCH=off` if your development accounts' emails aren't your platform account's.

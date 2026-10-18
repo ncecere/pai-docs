@@ -1,17 +1,100 @@
 ---
 title: Connecting your platform account
-description: Coming in Pi Agent Interface v0.2.0 — people connect their own account on the agent platform once, and their agents live in their personal workspace.
+description: How you connect your own account on the agent platform to Pi Agent Interface once, where your agents then live, how to disconnect, and what the account check does.
 ---
 
-<Callout type="warn" title="Coming in v0.2.0">
-  This is being built for Pi Agent Interface v0.2.0. It isn't in the release these docs describe, and the details below may change before it ships.
-</Callout>
+In Connect mode, which is how Pi Agent Interface reaches the agent platform unless your operator chose a service account, you use your **own account on the agent platform**. After you sign in to the app, you connect that account once. Your agents and conversations are then in your **personal workspace** on the platform, beside the agents of the teams you belong to, and the app acts on the platform as you.
 
-Today, Pi Agent Interface reaches everyone's agents with one team service account, and the agents live in that team on the platform (see [The agent platform](/docs/operate/platform)).
+How do you know your instance uses it? You are asked to connect after signing in, and **Settings → Account** has an **Agent platform** card. If you see neither, your operator uses a team service account instead and there is nothing for you to connect. See [The agent platform](/docs/operate/platform) for the two modes.
 
-In v0.2.0, people will be able to connect their own account on the agent platform instead, through the platform's OAuth Connect:
+## What you see
 
-- **You connect once.**
-- **Your agents live in your personal workspace** on the platform.
+<Steps>
+<Step>
 
-What else changes, for people and for operators, will be described here when it is decided.
+### Sign in to the app as usual
+
+You sign in with your organisation's single sign-on, never to the platform. See [Sign-in](/docs/operate/sign-in).
+
+</Step>
+<Step>
+
+### The "Connect your agents" screen
+
+Until you have connected, this is the only screen the app shows, whichever page you asked for. It says that the app uses your account on the agent platform for your agents and conversations, that you sign in there once and allow the app to use it, and that your agents stay in your own workspace. It also says the app acts only on your agents, as you, and that you can disconnect at any time, here or in the platform's **Connected apps**.
+
+Select **Connect**. Below the card, "Signed in as *you*" has a **Sign out** link.
+
+<Screenshot slot="connect-gate" />
+
+</Step>
+<Step>
+
+### The platform's sign-in and approval screens
+
+**Connect** takes you to the agent platform. If you aren't signed in there, the platform asks you to sign in first, on its own page. Then it shows an approval screen that names the app and asks you to allow it. These screens belong to the platform, so how they look depends on it.
+
+An administrator of the platform can mark Pi Agent Interface as **trusted**. Then the approval screen is skipped and you go straight back.
+
+</Step>
+<Step>
+
+### You land in the app
+
+The platform sends you back to the app, which finishes the connection and opens the start page. Your agents are there: the ones your administrator provides, your own and your teams'. The first time, your provided agents are made in your workspace, which can take a moment. See [Agents](/docs/use/agents).
+
+</Step>
+</Steps>
+
+If something goes wrong you come back to the **Connect your agents** screen, with the reason in a red box above the card. Select **Connect** to try again.
+
+| The box says | Because |
+|---|---|
+| You chose not to connect. | You declined on the platform's approval screen. |
+| That connection attempt expired. Try again. | More than ten minutes passed, or you came back in a different browser or after signing out. Start again from **Connect**. |
+| You connected *a* on the agent platform, but you're signed in here as *b*. … | The account check, below. |
+| The agent platform could not be reached. | The platform is down or unreachable from the app. Try again later. |
+| Connecting failed. Try again. | Something else went wrong. If it keeps happening, tell your operator: the server's log has the reason. |
+
+Other messages here come from the platform (for example when it refuses the app). An operator can find them in [Troubleshooting Connect](/docs/operate/platform#troubleshooting-connect).
+
+## Your connection in Settings
+
+**Settings → Account** has an **Agent platform** card, between **Profile** and **Sessions**.
+
+<Screenshot slot="settings-connection" />
+
+- **Connected account** shows the email of the platform account the app uses for you (its name, if the platform has no email for it), with "Your agents and conversations are on the agent platform, in this account." and a date. The date is when the app last renewed the connection, which it does in the background, so it is usually recent, not the day you first connected.
+- **Disconnect** stops the app using your platform account. It asks first: "Disconnect from the agent platform?" and says "You'll be asked to connect again before you can talk to your agents. Nothing is deleted." Select **Disconnect** to confirm. The app asks the platform to end its access, forgets what it kept, and shows the **Connect your agents** screen. Your agents and conversations stay on the platform, and connecting again brings them back.
+
+You can also end the connection from the platform, in its **Connected apps**.
+
+## When the connection ends
+
+If the platform stops accepting the app's access for you, because you disconnected the app in the platform's **Connected apps**, or a platform administrator revoked it, the next thing you do in the app brings the **Connect your agents** screen back. You don't need to sign in to the app again. Connect once more and carry on: nothing is lost, since your agents and conversations are on the platform.
+
+Your operator changing the app's session secret has the same effect for everyone, and also signs everyone out.
+
+If the platform is only unreachable for a while, the app says "The agent platform could not be reached." and keeps your connection. You don't need to connect again.
+
+## Where your token is kept
+
+The platform gives the app two tokens for you: a short-lived **access token**, and a **refresh token** that lets the app get a new one without asking you again. The app asks only for the platform's `agents` scope.
+
+- **They stay on the server.** The app's server keeps both in its own database, **encrypted** with a key derived from the app's session secret. Your browser never receives them: it holds only the app's session cookie, and the server calls the platform on your behalf. All the browser is told is which account you connected and when.
+- **The app acts as you.** It uses your token for everything it does for you, so the platform decides what you may see and use. The app has no key that reaches everyone's agents.
+- **They are renewed quietly.** The app gets a new access token shortly before the old one runs out. The refresh token changes every time it is used, so renewals for one person run one at a time.
+
+See [Security](/docs/operate/security#platform-tokens-connect-mode) for the operator's view.
+
+## The account check
+
+The app checks that the platform account you connect has **the same email address** as your account in the app (capitals don't matter). Two different accounts would put your agents and conversations in someone else's workspace.
+
+When they differ, the connection is refused, the access the platform just gave is revoked, nothing is kept, and you return to the **Connect your agents** screen with a message like this:
+
+> You connected sam.ortiz@example.com on the agent platform, but you're signed in here as priya.shah@example.com. Sign out of agents.example.com, then connect again with the same account.
+
+This usually means your browser was already signed in to the platform as someone else. Do what the message says: sign out of the platform's address, then select **Connect** again and sign in to the platform with the account that has your email.
+
+If your organisation uses different identity providers for the app and the platform, so your emails can't match, your operator can turn the check off with `CONNECT_EMAIL_MATCH=off`. See [Configuration](/docs/operate/configuration#the-agent-platform).

@@ -37,7 +37,7 @@ The corner of a row says what the conversation needs:
 
 Done and Failed are the conversations that need you. The browser tab's title counts them, for example **(2) Pi Agent Interface**. Opening the conversation clears its status.
 
-Whether an agent is working, and when its last reply finished or failed, comes from the platform as it happens, whichever device or tab started the work. A reply that finished while the app was closed shows as **Done** when you come back.
+Whether an agent is working, and when its last reply finished or failed, comes from the platform as it happens, whichever device or tab started the work: the app follows the platform's event stream, and lists change in place without reloading. A reply that finished while the app was closed shows as **Done** when you come back. Only while that stream is down does the app ask the platform now and then instead.
 
 ## Acting on a conversation
 
@@ -48,7 +48,7 @@ Point at a row to see **Pin**, **Snooze**, **Settle** and **More actions** (…)
 | Action | Does |
 |---|---|
 | **Pin** / **Unpin** | Keeps it at the top. Pinning also brings it back from Snoozed, Settled or Archived. |
-| **Snooze** | Hides it until a time: **In 1 hour**, **In 3 hours**, **This evening** (while that is more than an hour away), **Tomorrow**, **Next week** (Monday morning), or **Custom…**. Each shows the time it wakes. |
+| **Snooze** | Hides it until a time: **In 1 hour**, **In 3 hours**, **This evening** (6 pm, while that is more than an hour away), **Tomorrow morning** (9 am), **Next week** (Monday, 9 am), or **Custom…**. Each shows the time it wakes. |
 | **Settle** | Puts it on the Settled shelf: you are finished with it. Settling lets go of a pin and a snooze. |
 | **Mark unread** | Marks it **Done** again, as if you hadn't seen the last reply. |
 | **Archive** | Puts it on the Archived shelf. |

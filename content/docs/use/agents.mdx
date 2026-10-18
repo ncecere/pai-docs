@@ -1,19 +1,25 @@
 ---
 title: Agents
-description: The agents you have in Pi Agent Interface, the ones your administrator provides and the ones you make yourself in My agents, and what their avatars show.
+description: The agents you have in Pi Agent Interface — the ones your administrator provides, the ones you make yourself in My agents, and your teams' — how many you may make, and what their avatars show.
 ---
 
-Every agent you see in Pi Agent Interface is yours alone: nobody else can open it or read its conversations. Each has its own memory and its own conversations, and runs on a model on the agent platform.
+Each agent in Pi Agent Interface has its own memory and its own conversations, and runs on a model on the agent platform. The agents provided for you and the ones you make are yours alone: nobody else can open them or read their conversations. If your instance uses [Connect](/docs/use/connect-your-platform-account), you also see your teams' agents (below).
+
+In the agent picker (the agent's name at the bottom left of the message box) agents are grouped: **Provided**, **Yours**, and one group for each team you belong to, named for the team.
+
+<Screenshot slot="chat-agent-picker-teams" />
 
 ## Provided for you
 
-Your administrator decides which agents everyone gets. Each person has their own private copy of each one. The first is the built-in assistant, called **Assistant** unless your administrator renamed it. Provided agents are made for you the first time you open the app, and new ones appear the next time you open it after your administrator adds them.
+Your administrator decides which agents everyone gets. Each person has their own private copy of each one. The first is the built-in assistant, called **Assistant** unless your administrator renamed it. Provided agents are made for you the first time you open the app, and new ones appear the next time you open it after your administrator adds them. In Connect mode each is made **once per person, in your personal workspace** on the platform, so they are yours and nobody else's; one that is already there under its name is used rather than made again.
 
 You can chat with provided agents, but not rename, move or delete them. If your administrator removes one from the list, it disappears from the app.
 
 ## My agents
 
 **Settings → My agents** lists **Your agents** (the ones you made) and **Provided for you**. It says how many you have made out of how many you may, for example "2 of 5 made".
+
+In Connect mode, My agents works against your **personal workspace** on the platform. **Your agents** are all the agents in it that aren't provided copies, including ones you made in the platform's own console. Making, renaming, moving and deleting happen there. At v0.2.0 the **Provided for you** list also shows your teams' agents.
 
 <Screenshot slot="settings-my-agents" />
 
@@ -46,6 +52,13 @@ Select **Make agent**. "*Research helper* is ready." It appears in the agent pic
 
 If making agents is turned off, the page says "Making agents is turned off for now." and there is no **New agent** button.
 
+### How many you can make
+
+Two limits apply, and **the stricter one wins**:
+
+- **Your administrator's limit**, the number in "2 of 5 made" (default 5). At the limit, **New agent** is turned off: "You have 5, the most allowed. Delete one to make another."
+- **The platform's limit on your personal workspace** (its `maxAgents`, 5 unless the platform is set otherwise), in Connect mode. It is on the whole workspace, which also holds your copies of the provided agents, so you may reach it before your administrator's number. **Make agent** then says: "Your personal workspace on the agent platform holds up to *5* agents. Delete one to make another."
+
 ### Change or delete one
 
 Each of your agents has three buttons:
@@ -53,6 +66,12 @@ Each of your agents has three buttons:
 - **New chat** starts a conversation with it.
 - **Edit** renames it, or moves it to another model when you may choose. A new model applies from the agent's next start; a reply in progress isn't interrupted.
 - **Delete** asks first: "The agent, its memory and all its conversations are deleted for good. This can't be undone."
+
+## Team agents
+
+In Connect mode the agent picker also lists the agents of the teams you belong to on the platform, each team as its own group. You can chat with them. You can't rename, move or delete them here: their team's owners do that on the platform.
+
+A conversation you start with a team's agent is **private** to you, not shared with the team's members. Privacy is a platform feature: the app asks for it with the first message, and it takes effect once your platform supports private conversations.
 
 ## Avatars
 

@@ -9,13 +9,13 @@ description: Starting a conversation with one of your agents, queued messages, s
 
 - On a wide screen, a row of buttons below the question switches between your agents (up to eight), and **Recent with *agent*** lists your five latest conversations with it.
 - **Make your own agent** goes to [Settings → My agents](/docs/use/agents).
-- The agent's name at the bottom left of the message box opens the **agent picker**: search your agents, with **Provided** agents first and **Yours** after. **Make or manage your agents** at its foot goes to My agents.
+- The agent's name at the bottom left of the message box opens the **agent picker**: search your agents (by name, description, team or template). They are grouped, **Provided** first, then **Yours**, then one group for each of your teams (in Connect mode; see [Agents](/docs/use/agents#team-agents)). The group headings show when there is more than one group. **Make or manage your agents** at its foot goes to My agents.
 
 <Screenshot slot="chat-agent-picker" />
 
 Type in the message box and press Enter (Shift+Enter starts a new line; you can [swap these](/docs/use/settings#customization)). The conversation opens at once and your message is sent from there, so an agent that has to wake up shows "Waking *Assistant*…" rather than a frozen page. A new chat starts with the agent you asked for, else the one you used last, else your first.
 
-A conversation stays with the agent it started with; in a conversation, the agent's name in the message box can't be changed. To ask another agent, start a new chat.
+A conversation stays with the agent it started with; in a conversation, the agent's name in the message box can't be changed. To ask another agent, start a new chat. A conversation you start with a team's agent is private to you (see [Agents](/docs/use/agents#team-agents)).
 
 <Screenshot slot="chat-conversation" />
 
@@ -28,11 +28,13 @@ The reply streams in as it is written: Markdown with headings, lists, tables, sy
 - **Leave.** You can open another conversation or close the tab; the agent keeps working on the platform. The conversation shows as **Working** in the [inbox](/docs/use/inbox) and as **Done** when its reply finishes.
 - **Jump to latest.** If you scroll up while a reply is written, the view stays where you are and a **Jump to latest** button appears.
 
-A message can be up to 32,000 characters; a longer one is refused with its length. Long messages you sent fold after 12 lines, with **Show more**. Sending is safe to retry: a message that reached the platform once is never sent twice.
+A message can be up to 32,000 characters; a longer one is refused with its length. Long messages you sent (more than 12 lines, or 1,200 characters) fold, with **Show more**. Sending is safe to retry: a message that reached the platform once is never sent twice.
 
 ## The connection
 
 A conversation follows the agent live. If the connection drops, it says **Reconnecting to the agent…** and reconnects on its own. When a tab has been in the background for a minute and the agent isn't working, the conversation lets go of the agent so it can sleep, and says **Paused while this tab was in the background.** with **Resume**; it picks up again when you come back to the tab.
+
+If the platform connection has ended (Connect mode), the app shows **Connect your agents** instead: see [Connecting your platform account](/docs/use/connect-your-platform-account#when-the-connection-ends).
 
 If the conversation can't be opened, the page says **Conversation unavailable** (deleted, or not one of your agents) or **Could not open the conversation**, with **Retry** and **New chat**.
 
@@ -46,7 +48,7 @@ A failed reply says so in its place, in plain words, with **Try again**:
 
 <Screenshot slot="chat-reply-failed" />
 
-If the agent stops without answering at all, a note under your message says **No reply.** *Assistant* stopped without answering your last message, with **Try again**. In the inbox, a turn the agent dropped shows **Failed** after 90 seconds rather than Working.
+If the agent stops without answering at all, a note under your message says **No reply.** *Assistant* stopped without answering your last message, with **Try again**. In the inbox, a turn the agent dropped shows **Failed** rather than Working.
 
 **Try again** and **Send again** (under a reply) put your last question back in the message box, so you can send it as it is or change it first.
 

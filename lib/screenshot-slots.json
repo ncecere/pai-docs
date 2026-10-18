@@ -23,6 +23,12 @@
     ],
     "alt": "The agent picker open above the message box: \"Search agents...\", the group Provided (Assistant, HR Helper \"Questions about benefits and leave\") and the group Yours (Research helper), and \"Make or manage your agents\" at the foot."
   },
+  "chat-agent-picker-teams": {
+    "files": [
+      "chat-agent-picker-teams"
+    ],
+    "alt": "The agent picker open above the message box in Connect mode, grouped: Provided (Assistant, HR Helper), Yours (Research helper) and a group named for Priya's team, Finance, with the team's agent Close checklist, and \"Make or manage your agents\" at the foot."
+  },
   "chat-conversation": {
     "files": [
       "chat-conversation"
@@ -114,6 +120,18 @@
     ],
     "alt": "Settings → Usage for the last 30 days: Requests, Tokens, Estimated cost and Agents, Tokens per day as bars, and By agent with Assistant and Research helper."
   },
+  "connect-gate": {
+    "files": [
+      "connect-gate"
+    ],
+    "alt": "The \"Connect your agents\" screen: the Example Corp Agents wordmark, the heading and a line saying the app uses your account on the agent platform, a card with two points (your agents live in your personal workspace beside your teams' agents; the app acts only on your agents, as you, and you can disconnect at any time) and a Connect button, and \"Signed in as priya.shah@example.com. Sign out\" below."
+  },
+  "settings-connection": {
+    "files": [
+      "settings-connection"
+    ],
+    "alt": "Settings → Account for Priya Shah in Connect mode: Profile, then the Agent platform card with Connected account (priya.shah@example.com, with the date it was connected) and a Disconnect button, then Sessions."
+  },
   "admin-overview": {
     "files": [
       "admin-overview"
@@ -149,6 +167,12 @@
       "admin-features"
     ],
     "alt": "Admin → Features: Usage (on, \"On unless changed here.\") and Personal usage (on, \"Off unless changed here.\")."
+  },
+  "admin-features-locked": {
+    "files": [
+      "admin-features-locked"
+    ],
+    "alt": "Admin → Features in Connect mode: Usage with its switch off and unavailable, and the reason under it, \"Needs the service-account mode: with Connect, people's agents are in their own workspaces, which this app's administrators don't see.\", and Personal usage on (\"Off unless changed here.\")."
   },
   "admin-usage": {
     "files": [

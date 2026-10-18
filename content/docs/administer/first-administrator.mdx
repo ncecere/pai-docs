@@ -11,6 +11,8 @@ Set `INITIAL_ADMIN_EMAIL` to the email address of the person who should run the 
 
 The audit log records it: "Morgan Lee became the first administrator (INITIAL_ADMIN_EMAIL)". From then on, administrators promote others in [People](/docs/administer/people-and-roles). Leaving the variable set is harmless: once there is an active administrator, it does nothing, and if that person is later made a member, the change sticks.
 
+In Connect mode the new administrator, like everyone, [connects their own platform account](/docs/use/connect-your-platform-account) before the app shows anything else, including the dashboard. The Agents page needs that connection to read what the platform offers.
+
 ## Locked out: `admin:promote`
 
 If no one who can sign in is an administrator any more, make someone an administrator from the server. It needs only `DATABASE_URL` (and reads `.env.local` and `.env` too, if they exist).

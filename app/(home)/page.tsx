@@ -17,7 +17,7 @@ const sections = [
     href: '/docs/use',
     icon: <MessagesSquare />,
     description:
-      'Chatting with an agent, tool steps and reasoning, the inbox, keyboard shortcuts, your own agents and your settings.',
+      'Chatting with an agent, tool steps and reasoning, the inbox, keyboard shortcuts, your own agents, connecting your platform account and your settings.',
   },
   {
     title: 'Administer',
@@ -31,13 +31,13 @@ const sections = [
     href: '/docs/operate',
     icon: <Server />,
     description:
-      'The agent platform it needs, every setting, sign-in, Postgres and migrations, the container image, Kubernetes, security, upgrades and backups.',
+      'The agent platform it needs (Connect or a service account), every setting, sign-in, Postgres and migrations, the signed container image, the Kubernetes base, security, upgrades and backups.',
   },
   {
     title: 'Releases',
     href: '/docs/releases',
     icon: <Tag />,
-    description: `What changed in each release, and what is on main since ${productVersion}.`,
+    description: `What changed in each release: ${productVersion} is the latest, with Connect, the admin dashboard and a published image.`,
   },
 ];
 
@@ -93,8 +93,8 @@ export default function HomePage() {
       </Cards>
 
       <p className="mt-12 text-sm text-fd-muted-foreground">
-        Pi Agent Interface is pre-1.0 and MIT licensed. These docs describe {describedLabel}: the
-        latest release and what has been added since. More about the project is on{' '}
+        Pi Agent Interface is pre-1.0 and MIT licensed. These docs describe {describedLabel}, the
+        latest release. More about the project is on{' '}
         <a className="text-brand-link underline" href={productSite}>
           its website
         </a>

@@ -2,7 +2,7 @@
 
 The user, administrator and operator documentation for [Pi Agent Interface (PAI)](https://github.com/ncecere/pi-agent-interface), the self-hosted, open-source chat app for [Pi Durable](https://github.com/ncecere/pi-durable-platform) agents: everyone who signs in gets their own agents, with an inbox for the work they do. It's published at <https://docs.pai.bitop.dev>; the product's website is <https://pai.bitop.dev> (a separate repository). Both addresses, the repositories and the version the docs describe are in `lib/site.ts`.
 
-These pages are for the people who use Pi Agent Interface, the administrators who run an instance, and the operators who host it. The product repository's own README, CHANGELOG and code stay the engineering record. The docs describe **`main` after v0.1.0**, at commit `3ae3d9e` (the changes the changelog lists as Unreleased); v0.1.0 was tagged on 2026-10-18. One page, *Connecting your platform account*, describes what is decided for v0.2.0 and is marked "Coming in v0.2.0".
+These pages are for the people who use Pi Agent Interface, the administrators who run an instance, and the operators who host it. The product repository's own README, CHANGELOG and code stay the engineering record. The docs describe **v0.2.0**, released on 2026-10-18 (tag `v0.2.0`, commit `4815fa6`), the latest release; the Releases section's *Unreleased* page says there is nothing newer yet. Nothing in them is marked "coming": everything described is built at that tag.
 
 A static site: [Fumadocs](https://fumadocs.dev) on Next.js with `output: "export"`, TypeScript and Tailwind CSS v4, served by nginx in a container. Search is Fumadocs' built-in static index, searched in the browser. No tracking, no cookies, no external fonts or CDNs: Inter is self-hosted. The app's own HTTP API serves its web app and isn't a public contract, so there is no API reference; what the app calls on the agent platform is documented by hand in `content/docs/operate/platform.mdx`.
 
@@ -32,7 +32,7 @@ npm run dev          # http://localhost:3000
 ## Layout
 
 ```text
-lib/site.ts                   the site and product addresses, repositories and the version described
+lib/site.ts                   the site and product addresses, repositories, the version described and its commit, and the image digest
 lib/source.ts                 the docs as a Fumadocs source, and the lighter sidebar tree
 lib/mark.json                 the logo's mark as inline SVG markup (written by scripts/sync-logo.mjs)
 app/brand.css                 the brand tokens for Tailwind v4, copied verbatim from pai-assets; byte-identical with the website's copy
@@ -57,10 +57,10 @@ The sections are **Get started**, **Use**, **Administer**, **Operate** and **Rel
 
 ## Writing
 
-- Every claim must be true of the Pi Agent Interface version the docs describe (`lib/site.ts`). Check it against the product repository at that commit (`README.md`, `CHANGELOG.md`, `NOTICE.md`, `.env.example`, `Dockerfile`, `compose.yaml`, `server/*.ts`: `config.ts` for every setting and its checks, `app.ts` for routes and messages) and the web app (`src/routes/**`, `src/components/**`), and use the app's own words for pages and buttons. Read the commit, not a working tree: work for the next release happens there.
+- Every claim must be true of the Pi Agent Interface version the docs describe (`lib/site.ts`). Check it against the product repository at that tag (`README.md`, `CHANGELOG.md`, `NOTICE.md`, `.env.example`, `Dockerfile`, `compose.yaml`, `server/*.ts`: `config.ts` for every setting and its checks, `app.ts` for routes and messages) and the web app (`src/routes/**`, `src/components/**`), and use the app's own words for pages and buttons. Read the tag (`git show v0.2.0:<path>`), not a working tree: work for the next release happens on `main`, and `HEAD` may be ahead of the tag.
 - Lead with "Pi Agent Interface" in titles and first mentions on each page; "PAI" is fine afterwards. `check-names` enforces it. Don't name competing products. Open Chat Interface, whose web app Pi Agent Interface's is derived from, and the things it works with (Pi Durable, identity providers, Docker, Kubernetes, PostgreSQL) are named.
 - Plain, short sentences. Examples are generic: "Example Corp", the app at `https://chat.example.com`, the platform at `https://agents.example.com`.
-- Mark anything not yet built clearly ("Coming in v0.2.0"), and say only what is decided.
+- Document only what is built at the version described. If something depends on the platform rather than the app (for example private conversations with a team's agent), say so, and say what the app does.
 - Use Fumadocs' components where they help: `Callout`, `Steps`, `Tabs`, `Cards`, `Files`.
 - Each page has an "Edit on GitHub" link to its file in this repository.
 
@@ -87,13 +87,20 @@ rewrites `lib/mark.json` from `face/mark-small.svg` and `mark.svg`, and copies `
 
 ### Screenshots
 
-Screenshots come only from the fictional "Example Corp" demo instance, never from a real install. Each image has a named slot in `lib/screenshot-slots.json` (its alt text, the file names it may have, `"phone": true` for phone captures, and optionally a `hold` reason that keeps a capture out) and is placed with `<Screenshot slot="…" />`. Until an image is imported, the slot shows a clearly marked placeholder. `SCREENSHOTS.md` lists, per slot, the file, size, page, URL, persona and the state to set up. **None of the 27 slots is captured yet.** When you replace an image, check that its slot's alt text still describes it.
+Screenshots come only from the fictional "Example Corp" demo instance, never from a real install. Each image has a named slot in `lib/screenshot-slots.json` (its alt text, the file names it may have, `"phone": true` for phone captures, and optionally a `hold` reason that keeps a capture out) and is placed with `<Screenshot slot="…" />`. Until an image is imported, the slot shows a clearly marked placeholder. `SCREENSHOTS.md` lists, per slot, the file, size, page, URL, persona and the state to set up. **None of the 31 slots is captured yet** (27 from the first pass, and four added for v0.2.0: `connect-gate`, `settings-connection`, `chat-agent-picker-teams` and `admin-features-locked`). `SCREENSHOTS.md` is kept by hand: when you add or remove a slot, update `lib/screenshot-slots.json` and the table in `SCREENSHOTS.md` together, and its count. When you replace an image, check that its slot's alt text still describes it.
 
 ```sh
 SCREENSHOTS_DIR=../pai-assets/screenshots npm run screenshots
 ```
 
 converts each available PNG to WebP (at most 1600 px wide) in `public/images/`, and records its width and height in `lib/screenshots.json`.
+
+## A new release
+
+1. Read the new tag in the product repository (`README.md`, `CHANGELOG.md`, `.env.example`, `deploy/`, `server/`, `src/`), not `main`.
+2. Update `lib/site.ts` (`productVersion`, `productReleaseDate`, `describedCommit`, and the image digest from the GitHub Release).
+3. Add `content/docs/releases/vX-Y-Z.mdx` from the changelog, add it to `content/docs/releases/meta.json` and the table in `releases/index.mdx`, and reset `unreleased.mdx`.
+4. Fix the pages the release changed, then run `npm run build` (it ends with the name check) and `npm run check:links`.
 
 ## Container
 

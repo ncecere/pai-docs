@@ -1,17 +1,42 @@
 ---
 title: Security
-description: How Pi Agent Interface keeps people to their own agents — encrypted session cookies, CSRF tokens and origin checks, ownership checks, per-person stream limits and the browser's security headers.
+description: How Pi Agent Interface keeps people to their own agents — encrypted platform tokens and the account check in Connect mode, encrypted session cookies, CSRF tokens and origin checks, ownership checks, per-person stream limits and the browser's security headers.
 ---
 
-Pi Agent Interface holds one powerful credential: the team service account's key, which reaches every person's agents. Most of its security is about keeping that key on the server and keeping each person to their own agents.
+How Pi Agent Interface is secured depends on how it reaches the agent platform (`PLATFORM_AUTH`, see [The agent platform](/docs/operate/platform)).
 
-## The service key
+- **Connect mode** (the default): the app holds each person's own platform tokens, encrypted. Each can reach only what that person may use on the platform, and the platform decides.
+- **Service mode**: the app holds one powerful credential, the team service account's key, which reaches every person's agents. Most of the security is about keeping that key on the server and keeping each person to their own agents.
+
+## Platform tokens (Connect mode)
+
+When a person connects, the platform gives the app an access token and a refresh token for them (scope `agents`).
+
+- **Encrypted at rest.** The server keeps them in its database (`platform_connections`), each sealed with AES-256-GCM under a key derived from `SESSION_SECRET` (HKDF-SHA256, a purpose of its own, apart from the session cookie's). The database never holds a token in the clear.
+- **Never in the browser.** The browser holds only the app's session cookie. The server calls the platform for the person, and the browser is told only which platform account is connected and when it was last renewed.
+- **One person's token, that person's agents.** There is no shared key. A token reaches what its person may use on the platform, and the platform enforces it. The app still refuses to rename or delete anything outside the person's own personal workspace, and provided copies can't be deleted from the app.
+- **Renewed one at a time.** Access tokens are renewed shortly before they run out; the refresh token changes on every use, so a database lock lets only one renewal for a person run at a time, across replicas. A renewal the platform refuses ends the connection and the person is asked to connect again.
+- **Revoked when it should be.** **Disconnect** and a refused account ask the platform to revoke the refresh token (best effort), then forget the tokens.
+- **Changing `SESSION_SECRET`** makes the stored tokens unreadable. The app forgets them, and everyone connects again.
+- **The flow itself** is the authorization code flow with PKCE (S256) and a `state`, held between the redirect and the callback in a sealed, HttpOnly cookie (`__Host-pai_connect` on https) that lasts 10 minutes and is tied to the signed-in person. After connecting, people return only to a path on the app itself. An answer that names an issuer other than the platform's is refused.
+- **Redirects aren't followed** in any call to the platform.
+- **The metadata document is public by design.** `<APP_URL>/oauth/client-metadata.json` holds only the app's name, address, logo and callback address, and is the one thing the platform must reach without signing in.
+
+### The account check (Connect mode)
+
+After the platform returns a person, the app asks it who they connected (`GET /v1/me`) and compares that account's email with the person's email here, ignoring case. A mismatch would put the person's agents and conversations in someone else's workspace, so with `CONNECT_EMAIL_MATCH=require` (the default) the app **refuses** it: it asks the platform to revoke the access it was just given, keeps nothing, and shows the person:
+
+> You connected sam.ortiz@example.com on the agent platform, but you're signed in here as priya.shah@example.com. Sign out of agents.example.com, then connect again with the same account.
+
+The check is skipped when either side has no email address. Set `CONNECT_EMAIL_MATCH=off` only where the app and the platform use different identity providers, so the emails can't match; then nothing stops a person connecting someone else's account. See [Configuration](/docs/operate/configuration#the-agent-platform).
+
+## The service key (service mode)
 
 `PLATFORM_SERVICE_KEY` is read from the environment and used only by the server, for requests to the platform. It is never sent to browsers, and the server refuses to start with a platform address that isn't https (loopback excepted). Redirects from the platform aren't followed. If the platform refuses it, the log says so and people see "The agent platform refused this app's service key." To change it, set the new key and restart the server; revoke the old one on the platform once nothing uses it.
 
 ## Ownership
 
-Every request that names an agent is checked: the agent's key on the platform must start with the signed-in person's own `u:<person>`, or the answer is "Agent not found", the same as for an agent that doesn't exist. Conversation IDs are checked for their form before anything is relayed. Events from the platform's shared event stream go only to the person whose agent they concern. This is tested in the repository's server tests. See [How people are kept apart](/docs/operate/platform#how-people-are-kept-apart).
+In Connect mode the platform decides what a person may see and use, with their own token. In service mode, every request that names an agent is checked: the agent's key on the platform must start with the signed-in person's own `u:<person>`, or the answer is "Agent not found", the same as for an agent that doesn't exist. Conversation IDs are checked for their form before anything is relayed. Events from the platform's shared event stream go only to the person whose agent they concern. This is tested in the repository's server tests. See [How people are kept apart in service mode](/docs/operate/platform#how-people-are-kept-apart-in-service-mode).
 
 ## Sessions
 

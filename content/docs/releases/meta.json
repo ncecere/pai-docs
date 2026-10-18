@@ -2,5 +2,10 @@
   "title": "Releases",
   "description": "What changed in each release",
   "root": true,
-  "pages": ["index", "unreleased", "v0-1-0"]
+  "pages": [
+    "index",
+    "unreleased",
+    "v0-2-0",
+    "v0-1-0"
+  ]
 }
