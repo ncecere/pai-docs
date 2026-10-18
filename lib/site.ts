@@ -1,0 +1,50 @@
+/*
+ * The site's addresses, repositories and the version of the product it
+ * describes, in one place so they are easy to change. Everything else imports
+ * from here.
+ */
+
+/** The published docs. Used for absolute URLs (Open Graph, metadata). */
+export const siteUrl = 'https://docs.pai.bitop.dev';
+
+/** The product's own website. */
+export const productSite = 'https://pai.bitop.dev';
+
+/** The docs' own repository: "Edit on GitHub" links point here. */
+export const gitConfig = {
+  user: 'ncecere',
+  repo: 'pai-docs',
+  branch: 'main',
+};
+
+/** The product's repository. */
+export const productRepo = 'https://github.com/ncecere/pi-agent-interface';
+
+/** The agent platform Pi Agent Interface runs on. */
+export const platformRepo = 'https://github.com/ncecere/pi-durable-platform';
+
+/** The latest tagged release of Pi Agent Interface. */
+export const productVersion = 'v0.1.0';
+
+/** The date that release was tagged (YYYY-MM-DD). */
+export const productReleaseDate = '2026-10-18';
+
+/**
+ * What these docs describe: the product's main branch after the latest
+ * release, at this commit (the changes the changelog lists as Unreleased).
+ */
+export const describedRef = 'main';
+export const describedCommit = '3ae3d9e';
+export const describedLabel = `${describedRef} after ${productVersion}`;
+
+/** Where the release workflow publishes the container image (from the next release tag on). */
+export const productImage = 'ghcr.io/ncecere/pi-agent-interface';
+
+export const appName = 'Pi Agent Interface docs';
+export const docsRoute = '/docs';
+
+export const docsRepoUrl = `https://github.com/${gitConfig.user}/${gitConfig.repo}`;
+
+export function editUrl(path: string): string {
+  return `${docsRepoUrl}/blob/${gitConfig.branch}/${path}`;
+}

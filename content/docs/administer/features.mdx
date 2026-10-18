@@ -1,0 +1,29 @@
+---
+title: Features
+description: Optional parts of Pi Agent Interface an instance can do without, turned on and off in Admin → Features or locked off with DISABLED_FEATURES.
+---
+
+**Admin → Features** lists the parts of the app this instance can do without. Turning one off hides it for everyone; its data stays where it is. Each switch saves at once ("Usage is off.") and is recorded in the audit log ("Morgan Lee changed which features are on").
+
+<Screenshot slot="admin-features" />
+
+| Feature | Name in `DISABLED_FEATURES` | Default | What it does |
+|---|---|---|---|
+| **Usage** | `usage` | On | Administrators see how much each person's agents use their models in [Admin → Usage](/docs/administer/usage): requests, tokens and an estimated cost, from the platform's usage reports. |
+| **Personal usage** | `myUsage` | Off | Everyone sees how much their own agents use their models in [Settings → Usage](/docs/use/settings#usage): requests, tokens and an estimated cost, per agent and per day. Nobody sees anyone else's. |
+
+Each row says what happens if nobody changes it: "On unless changed here" or "Off unless changed here".
+
+## What "off" means
+
+The server enforces it: while a feature is off, its routes answer as if they didn't exist. The browser is told which features are on, so the page and its entry in the menu or the admin page list are hidden.
+
+## Locked off by the deployment
+
+A deployment that can't support a feature, for example a platform without the usage report it needs, lists it in `DISABLED_FEATURES`, comma-separated:
+
+```sh
+DISABLED_FEATURES=usage,myUsage
+```
+
+The names are case-sensitive. An unknown name stops the server at start (`DISABLED_FEATURES: there is no feature "…" (known: usage, myUsage)`). A locked feature is off whatever administrators chose, and its switch is turned off with the note "Turned off by this deployment (DISABLED_FEATURES), so it cannot be turned on here." Removing it from the variable restores the administrators' choice.

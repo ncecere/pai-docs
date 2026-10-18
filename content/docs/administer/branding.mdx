@@ -1,0 +1,23 @@
+---
+title: Branding
+description: The name, logo and default look of a Pi Agent Interface instance, shown on every page and the sign-in page.
+---
+
+**Admin → Branding** decides how the instance presents itself, on every page, the sign-in page and the browser tab. People start with this look and can change their own in [Settings → Customization](/docs/use/settings#customization). The **Preview** at the top shows the name and logo as they will appear.
+
+<Screenshot slot="admin-branding" />
+
+| Section | Setting | Does |
+|---|---|---|
+| **Identity** | **Name** | Shown in the sidebar, the sign-in page and page titles. 1 to 60 characters. The default is **Pi Agent Interface**, or `APP_NAME` if the deployment sets it. |
+| | **Logo** | An https address (without a user name or password in it), or a path on this site such as `/logo.svg`. Leave it empty for the built-in mark. A logo replaces the mark and the name where both would show. A logo given as a path also becomes the browser tab's icon. |
+| **Default look** | **Accent** | Buttons, links and highlights: **Neutral**, **Blue**, **Violet** or **Emerald**. Default Neutral. |
+| | **Appearance** | **Light**, **Dark**, or **System** (each person's device setting). Default Dark. |
+
+**Save** applies the changes, **Discard** drops them. A field that isn't valid is marked, with what to fix. Pages pick up the new branding within about 30 seconds, and the change is in the audit log ("Morgan Lee changed the branding").
+
+A long name is shortened to its initials in the narrow sidebar header: names of up to 20 characters show in full.
+
+<Callout title="Hosting a logo">
+  The app's Content Security Policy allows images from `https:` addresses and from the app itself, so a logo at any https address loads. The app serves only its own web app, so a path such as `/logo.svg` must be one your reverse proxy serves in front of it.
+</Callout>

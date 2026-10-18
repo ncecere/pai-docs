@@ -1,0 +1,33 @@
+---
+title: Audit log
+description: Every change to people, roles and settings in Pi Agent Interface — who made it and when.
+---
+
+**Admin → Audit log** lists every change to people, roles and settings: who made it and when, newest first. The newest 500 are shown; the [overview](/docs/administer#overview) shows the latest eight under **Recent changes**.
+
+<Screenshot slot="admin-audit" />
+
+## What is recorded
+
+| Entry | When |
+|---|---|
+| "*Priya Shah* signed in for the first time" | A person's first sign-in. |
+| "*Morgan Lee* became the first administrator (INITIAL_ADMIN_EMAIL)" | The [bootstrap](/docs/administer/first-administrator). |
+| "*Morgan Lee* was made an administrator from the server (recovery command)" | `admin:promote`. |
+| "*Morgan Lee* made *Sam Ortiz* an administrator" / "… a member" | A change of role. |
+| "*Morgan Lee* suspended *Sam Ortiz*" / "… restored …" | A suspension or a restore. |
+| "*Priya Shah* signed out everywhere" | **Sign out everywhere** in Settings. |
+| "*Morgan Lee* changed the branding" | Admin → Branding. |
+| "*Morgan Lee* changed the agent settings" | Admin → Agents, Everyone's agents. |
+| "*Morgan Lee* changed the provided agents" | Admin → Agents, Provided agents. |
+| "*Morgan Lee* changed which features are on" | Admin → Features. |
+
+Settings entries record that a setting changed and who changed it, not the values before and after.
+
+## What isn't recorded
+
+Conversations, messages and agents' work aren't in the audit log: they live on the agent platform. People making, renaming or deleting their own agents, and changes to their own preferences, aren't recorded either.
+
+## Keeping it
+
+The log is the `audit_log` table in the app's PostgreSQL. The app never deletes entries and offers no export; back up the database to keep it (see [Upgrades and backups](/docs/operate/upgrades-and-backups)), and query the table directly to search older entries.

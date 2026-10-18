@@ -1,0 +1,66 @@
+---
+title: What is Pi Agent Interface
+description: A self-hosted, open-source chat app for Pi Durable agents, where everyone who signs in gets their own agents and an inbox for the work they do.
+---
+
+Pi Agent Interface is an open-source (MIT) chat app that an organisation runs for its own people, in front of a [Pi Durable platform](https://github.com/ncecere/pi-durable-platform). Everyone who signs in gets their own agents: an assistant to start with, the agents an administrator provides, and agents they make themselves. Agents keep working while you are elsewhere, so the app gives you an **inbox** across all your conversations: which are working, which have a new reply, which failed, and which you have snoozed, settled or put away.
+
+People sign in to Pi Agent Interface with your single sign-on, never to the agent platform. The app's own server talks to the platform for them, with one team service account, and checks on every request that the agent being reached is the signed-in person's own.
+
+<Screenshot slot="chat-home" />
+
+## What it does
+
+<Cards>
+  <Card title="Chat with your agents" href="/docs/use/chat">
+    Streaming replies with Markdown, code, tables, maths and diagrams. Messages sent while an agent works wait their turn; Stop ends a reply.
+  </Card>
+  <Card title="See the work" href="/docs/use/tool-steps-and-reasoning">
+    Reasoning and tool steps gathered in one block above the answer, with the latest steps shown live while the agent works.
+  </Card>
+  <Card title="An inbox across conversations" href="/docs/use/inbox">
+    Pinned, Working and Inbox, with Snoozed, Settled and Archived shelves. It follows you between devices.
+  </Card>
+  <Card title="Your own agents" href="/docs/use/agents">
+    Provided agents everyone gets a private copy of, and agents you make yourself from the templates your administrator allows.
+  </Card>
+  <Card title="An admin dashboard" href="/docs/administer">
+    People and roles, the default model and templates, provided agents, branding, optional features, usage and an audit log.
+  </Card>
+  <Card title="Small to run" href="/docs/operate">
+    One Node.js process and a PostgreSQL database for people, roles and settings. Conversations stay on the platform.
+  </Card>
+</Cards>
+
+## How it is built
+
+Pi Agent Interface is one Node.js server that serves the web app and its API from one container image. It keeps its own records (the people who have signed in, their roles, settings, preferences and an audit log) in **PostgreSQL**, and migrates the database when it starts. The agents and their conversations live on the **Pi Durable platform**, in a team the app reaches with a service account key that never leaves the server. Sessions are encrypted cookies, so there is no session store to run.
+
+```text
+Morgan, Priya, Sam ──sign in──▶ Pi Agent Interface ──service key──▶ Pi Durable platform
+                                 │                                     team: pi-agent-interface
+                                 ├─ PostgreSQL: people, roles,         ├─ Priya's agents
+                                 │  settings, audit log                ├─ Sam's agents
+                                 └─ encrypted session cookie           └─ Morgan's agents
+```
+
+The web app comes from [Open Chat Interface](https://github.com/ncecere/open-chat-interface), so its layout, Settings and admin dashboard will look familiar to anyone who has used it. See [The agent platform](/docs/operate/platform) for what the app asks of the platform.
+
+## Who these docs are for
+
+| You are | Start with |
+|---|---|
+| Someone using Pi Agent Interface | [Use](/docs/use) |
+| An administrator running an instance | [The first administrator](/docs/administer/first-administrator), then [Administer](/docs/administer) |
+| An operator installing and hosting it | [The agent platform](/docs/operate/platform), then [Operate](/docs/operate) |
+
+If you only want to see it working, follow the [quick start](/docs/get-started/quick-start).
+
+## Project status
+
+Pi Agent Interface is **pre-1.0**. The latest release is **v0.1.0** (2026-10-18). These docs describe the `main` branch after it: everything the changelog lists as Unreleased, including the app's own database, the admin dashboard, Settings and people's own agents. See [Releases](/docs/releases). In short:
+
+- The app's HTTP API serves its own web app. It is not a public contract and may change in any release.
+- Database migrations are forward-only. Going back past one means restoring a backup.
+- No container image has been published yet. The repository's release workflow publishes `ghcr.io/ncecere/pi-agent-interface` for release tags; until then, [build the image](/docs/operate/container) from the repository.
+- Coming in v0.2.0: people [connect their own platform account](/docs/use/connect-your-platform-account), so their agents live in their personal workspace.

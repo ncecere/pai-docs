@@ -1,0 +1,25 @@
+---
+title: Releases
+description: Pi Agent Interface's releases, what is on main since the latest one, and what to expect before 1.0.
+---
+
+| Release | Date | In short |
+|---|---|---|
+| [Unreleased](/docs/releases/unreleased) | on `main` | The app's own PostgreSQL, the admin dashboard and Settings, provided agents and people's own agents, the inbox on every device and live from the platform, renaming conversations, optional features with usage per person, clearer tool steps and failures, and the Face logo. Migrations 1 and 2. |
+| [v0.1.0](/docs/releases/v0-1-0) | 2026-10-18 | The first release: a chat app for Pi Durable agents, one assistant per person, an inbox across conversations, animated avatars, single sign-on, and a container image built from the repository. |
+
+These docs describe **`main` after v0.1.0**, at commit `3ae3d9e`: everything under [Unreleased](/docs/releases/unreleased). The full history is in the repository's [changelog](https://github.com/ncecere/pi-agent-interface/blob/main/CHANGELOG.md).
+
+## Coming in v0.2.0
+
+People [connect their own platform account](/docs/use/connect-your-platform-account) once, through the platform's OAuth Connect, and their agents live in their personal workspace.
+
+## Before 1.0
+
+- **It is development software.** It is tested with unit tests and server tests against a real PostgreSQL and an in-process OpenID Connect provider. Try it in your environment before you rely on it.
+- **Upgrades only go forward.** Migrations can't be undone by changing images; going back past one means restoring a backup. Read every release's notes between your version and the target. See [Upgrades and backups](/docs/operate/upgrades-and-backups).
+- **The app's HTTP API isn't a public contract.** It serves the app's own web app and may change in any release.
+
+## How releases are published
+
+Each release is a Git tag, `vX.Y.Z`, whose version matches `package.json` and whose notes are the `## X.Y.Z` section of `CHANGELOG.md`. Pushing the tag runs the repository's `image.yml` workflow, which builds the image for linux/amd64 and linux/arm64, checks that it reports the version and runs as the non-root user, scans it, publishes `ghcr.io/ncecere/pi-agent-interface:vX.Y.Z` (and `latest` for final releases), signs it with cosign keyless signing, and creates the GitHub release with the image's digest. The workflow was added after v0.1.0, so v0.1.0 has no published image. See [The container image](/docs/operate/container#getting-the-image).

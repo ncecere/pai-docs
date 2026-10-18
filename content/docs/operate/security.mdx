@@ -1,0 +1,66 @@
+---
+title: Security
+description: How Pi Agent Interface keeps people to their own agents — encrypted session cookies, CSRF tokens and origin checks, ownership checks, per-person stream limits and the browser's security headers.
+---
+
+Pi Agent Interface holds one powerful credential: the team service account's key, which reaches every person's agents. Most of its security is about keeping that key on the server and keeping each person to their own agents.
+
+## The service key
+
+`PLATFORM_SERVICE_KEY` is read from the environment and used only by the server, for requests to the platform. It is never sent to browsers, and the server refuses to start with a platform address that isn't https (loopback excepted). Redirects from the platform aren't followed. If the platform refuses it, the log says so and people see "The agent platform refused this app's service key." To change it, set the new key and restart the server; revoke the old one on the platform once nothing uses it.
+
+## Ownership
+
+Every request that names an agent is checked: the agent's key on the platform must start with the signed-in person's own `u:<person>`, or the answer is "Agent not found", the same as for an agent that doesn't exist. Conversation IDs are checked for their form before anything is relayed. Events from the platform's shared event stream go only to the person whose agent they concern. This is tested in the repository's server tests. See [How people are kept apart](/docs/operate/platform#how-people-are-kept-apart).
+
+## Sessions
+
+- **An encrypted cookie, no session store.** The session (the person's ID, name and email, a CSRF token, its expiry and the person's session version) is sealed with AES-256-GCM, under a key derived from `SESSION_SECRET` with HKDF-SHA256. It can't be read or forged without the secret, and its expiry is checked on every request.
+- **The cookie** is `__Host-pai_session` on https (`pai_session` on a loopback http address): `HttpOnly`, `Secure` on https, `SameSite=Lax`, path `/`, and it lasts `SESSION_TTL_HOURS` (default 7 days). It isn't extended by use.
+- **Ending sessions.** Each person has a session version. **Sign out everywhere** and a suspension raise it, which ends every session they have. The server re-reads each person's record at most every 10 seconds, so a change of role, a suspension or sign-out everywhere reaches open sessions within about ten seconds.
+- **Changing `SESSION_SECRET`** signs everyone out.
+- **Single sign-on** uses the authorization code flow with PKCE (S256), `state` and `nonce`, carried between the redirect and the callback in a second sealed cookie that lasts 10 minutes. After signing in, people return only to a path on the app itself, never another site.
+
+## Writes: CSRF and origin
+
+Every request that changes something (anything but GET, HEAD and OPTIONS) must:
+
+- carry the session's CSRF token in `X-CSRF-Token`, and
+- come from the app's own origin: an `Origin` header, when present, must equal `APP_URL`'s origin.
+
+Otherwise it is refused: "Invalid request token or origin. Reload the page and try again." Signing out is checked the same way. The development sign-in accepts only the app's own origin.
+
+## Limits
+
+| Limit | Value | When reached |
+|---|---|---|
+| Open conversations per person | 8 | "Too many conversations are open at once. Close some and try again." Each open conversation keeps an agent awake. |
+| Tabs following the inbox per person | 6 | "Too many tabs are open at once." |
+| A message request | 256 KiB | Refused as too large. The web app limits messages to 32,000 characters. |
+| A saved preference | `appearance` 4 KiB, `inbox` 512 KiB | Refused as too large. |
+| A conversation's name | 1 to 200 characters | Refused. |
+
+The stream limits are counted per server process.
+
+## Headers
+
+- Every response: `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, and on https `Strict-Transport-Security: max-age=31536000; includeSubDomains`. API responses are `Cache-Control: no-store`.
+- Pages: a Content Security Policy,
+
+  ```text
+  default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;
+  font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  ```
+
+  so the page runs only its own scripts and talks only to its own server. Images may come from any https address, for an administrator's logo.
+- Built assets under `/assets/` are cached for a year (their names change with their content); pages aren't cached.
+
+## In the browser
+
+Links in replies that lead to another site open through a warning that names the site (**Open external link**). On a shared browser, each person's appearance, avatar style and inbox are their own: the next person to sign in doesn't inherit them.
+
+## Known limitations
+
+- Access is all or nothing: anyone the identity provider lets sign in can use the app. There is no access control by identity-provider group; restrict access in the provider.
+- Single sign-on is tested against an in-process provider, not against a particular product.
+- The app has no rate limits of its own beyond the stream limits above.

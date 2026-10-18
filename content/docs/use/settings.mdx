@@ -1,0 +1,51 @@
+---
+title: Settings
+description: Your account, how Pi Agent Interface looks and types, your agents, your settled and archived conversations, and your usage when it is turned on.
+---
+
+**Settings**, from the menu under your name or **Open settings** in the command palette, is a page of its own. Your name, email and role (**Member** or **Administrator**) are on the left, with the **Keyboard shortcuts** card; the sections are tabs: **Account**, **Customization**, **My agents**, **Conversations**, and **Usage** when your administrator has turned it on. **Back to chat** returns to your conversations.
+
+Everything you set here is saved to your account, so it follows you to every device you sign in on. On a shared computer, the next person to sign in starts from their own settings, not yours.
+
+## Account
+
+<Screenshot slot="settings-account" />
+
+- **Profile**: your **Name** and **Email** come from your organisation's sign-in; change them there and they update here the next time you sign in. **Role** is decided by your administrator.
+- **Sessions**: **Sign out** signs you out of this browser. **Sign out everywhere** signs you out of every browser and device you have used, this one included, after asking "Sign out everywhere?". Use it if you signed in on a computer that isn't yours. Your conversations and settings are kept.
+
+## Customization
+
+<Screenshot slot="settings-customization" />
+
+| Section | Setting | Does |
+|---|---|---|
+| **Look** | **Appearance** | **Light**, **Dark**, or **System** (follow your device). |
+| | **Accent** | The colour of buttons, links and highlights: **Neutral**, **Blue**, **Violet** or **Emerald**. |
+| **Agents** | **Avatar style** | How agents look: **Face**, **Signal** or **Pixel**. Each moves with what the agent is doing. |
+| **Typing and reading** | **Enter adds a new line** | On: Enter adds a line and ⌘+Enter (Ctrl+Enter) sends. Off: Enter sends and Shift+Enter adds a line. |
+| | **Wrap long code lines** | Wraps lines in code blocks instead of scrolling them sideways. |
+
+Until you choose, the appearance and accent are your administrator's defaults (see [Branding](/docs/administer/branding)). Theme, avatar, **Wrap long code lines** and **Enter adds a new line** are also in **Appearance settings**, the button at the top right of every page.
+
+## My agents
+
+Your own agents, and the ones provided for you. See [Agents](/docs/use/agents#my-agents).
+
+## Conversations
+
+Your **Archived** and **Settled** conversations, with the date each was put away and, if you have several agents, which agent it is with.
+
+<Screenshot slot="settings-conversations" />
+
+- **Restore** (archived) and **Move to inbox** (settled) bring one back.
+- **Delete** deletes one for good, after asking.
+- Tick conversations, or **Select all**, to restore or delete them together: "Delete 4 conversations? They are deleted from the agent for good. This can't be undone."
+
+## Usage
+
+When your administrator has turned **Personal usage** on, **Usage** shows how much your agents use their models over the last **7 days**, **30 days** or **90 days**: **Requests**, **Tokens** (in and out), an **Estimated cost** and how many **Agents** were used, then **Tokens per day** and a table **By agent**. Days are in UTC. Only you and your administrators see it.
+
+<Screenshot slot="settings-usage" />
+
+The cost is an estimate from the prices the agent platform has for each model. A dash means the models used have no prices yet; a **+** means some requests were to models without prices and aren't counted.

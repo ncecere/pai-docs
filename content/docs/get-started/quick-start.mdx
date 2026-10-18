@@ -1,0 +1,154 @@
+---
+title: Quick start
+description: Run Pi Agent Interface on your own machine with Docker Compose or from source, and sign in with the development accounts.
+---
+
+The quickest way to see Pi Agent Interface working is to run it on your machine with its built-in **development accounts** (Tim, Bob and Sally, no password) and point it at a Pi Durable platform. Each development account gets its own agents on the platform, so you can see how people are kept apart.
+
+<Callout type="warn" title="For your machine only">
+  The development accounts work only when the app's address (`APP_URL`) is `localhost`, `127.0.0.1` or `[::1]`: the server refuses to start otherwise. This setup is a way to look around, not a production install. See [Operate](/docs/operate) for that.
+</Callout>
+
+## What you need
+
+- **A Pi Durable platform** with a team for the app (this guide uses the slug `pi-agent-interface`), a **service account** in the team with role **editor** and a key (`pdp_sa_…`), and preferably a **model published to the team**. Without a model, every agent answers from the platform's default, which out of the box is a scripted demo model. See [The agent platform](/docs/operate/platform).
+- **Docker** with Compose v2, and **Git**.
+- For the source route: **Node.js 22** and **pnpm** (the version in the repository's `package.json`, through `corepack enable`).
+
+## With Docker Compose
+
+This runs the app and its PostgreSQL in containers. No image is published yet, so Compose builds it from the repository.
+
+<Steps>
+<Step>
+
+### Get the source
+
+```sh
+git clone https://github.com/ncecere/pi-agent-interface.git
+cd pi-agent-interface
+```
+
+</Step>
+<Step>
+
+### Write a Compose file for the app and its database
+
+The repository's own `compose.yaml` runs only a development database. Save this next to it as `compose.local.yaml`:
+
+```yaml title="compose.local.yaml"
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: pai
+      POSTGRES_PASSWORD: pai-local-only
+      POSTGRES_DB: pai
+    volumes:
+      - pai-local-db:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U pai]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - 127.0.0.1:8080:8080
+    env_file: .env.local
+    environment:
+      APP_URL: http://localhost:8080
+      DATABASE_URL: postgres://pai:pai-local-only@db:5432/pai
+      DEV_AUTH: "true"
+
+volumes:
+  pai-local-db:
+```
+
+</Step>
+<Step>
+
+### Write `.env.local`
+
+Fill in your platform's address, team and service account key, and generate a session secret:
+
+```sh
+cat > .env.local <<EOF
+PLATFORM_URL=https://agents.example.com
+PLATFORM_TEAM=pi-agent-interface
+PLATFORM_SERVICE_KEY=pdp_sa_...
+AGENT_MODEL=
+SESSION_SECRET=$(openssl rand -base64 48)
+INITIAL_ADMIN_EMAIL=tim@example.test
+EOF
+```
+
+`INITIAL_ADMIN_EMAIL=tim@example.test` makes Tim the first administrator when he signs in, so you can look at the admin dashboard too. Set `AGENT_MODEL` to the name of a model published to the team, or leave it empty for the platform's default.
+
+<Callout title="A platform on the same machine">
+  Outside `localhost` the platform must be reached over https, because the service key travels with every request. Inside a container, `localhost` is the container itself, so a development platform at `http://localhost:8098` on your machine can't be reached from it. Use the source route below for that.
+</Callout>
+
+</Step>
+<Step>
+
+### Start it
+
+```sh
+docker compose -f compose.local.yaml up -d --build
+docker compose -f compose.local.yaml logs app
+```
+
+The log says the database was migrated and where the server listens. If the configuration is incomplete, the server stops and the log lists every problem.
+
+</Step>
+<Step>
+
+### Sign in
+
+Open [http://localhost:8080](http://localhost:8080). The sign-in page lists the **Development accounts**: choose **Tim**, **Bob** or **Sally**.
+
+<Screenshot slot="sign-in-dev" />
+
+The first time each person opens the app, their **Assistant** is made on the platform. Type a message and press Enter.
+
+</Step>
+</Steps>
+
+To stop it, `docker compose -f compose.local.yaml down` (add `-v` to delete the database too). The agents and conversations stay on the platform.
+
+## From source
+
+This is the repository's development setup: the web app with hot reload on `http://localhost:5177`, the server on `127.0.0.1:5178`, and a development PostgreSQL on `127.0.0.1:55433`. Because the app runs on your machine, it can reach a development platform at `http://localhost:…`.
+
+```sh
+git clone https://github.com/ncecere/pi-agent-interface.git
+cd pi-agent-interface
+cp .env.example .env.local   # set PLATFORM_*, SESSION_SECRET, DEV_AUTH=true
+pnpm install
+pnpm db:up                   # the development PostgreSQL (compose.yaml)
+pnpm dev
+```
+
+`.env.example` already has `APP_URL=http://localhost:5177` and the `DATABASE_URL` of the development database. Open [http://localhost:5177](http://localhost:5177) and sign in as Tim, Bob or Sally.
+
+## What to try
+
+- Send a message, then a second one while the agent is still answering: it waits its turn. **Stop** ends a reply. See [Chatting](/docs/use/chat).
+- Leave a conversation while the agent works and watch it move through **Working** to **Done** in the sidebar. See [The inbox](/docs/use/inbox).
+- Make an agent of your own in **Settings → My agents**. See [Agents](/docs/use/agents).
+- Sign in as Bob in a private window: Bob sees none of Tim's agents or conversations.
+- As Tim, open **Admin dashboard** from the menu under your name. See [Administer](/docs/administer).
+
+## If something goes wrong
+
+| You see | Why |
+|---|---|
+| The server stops with `Configuration:` and a list | A required setting is missing or unsafe. Each line names it. See [Configuration](/docs/operate/configuration). |
+| "The agent platform refused this app's service key." | The key is wrong, revoked, or its service account isn't an editor in `PLATFORM_TEAM`. |
+| "The agent platform could not be reached." | `PLATFORM_URL` is wrong or unreachable from where the server runs. |
+| Every agent gives the same scripted answer | No model is published to the team (or `AGENT_MODEL` names one that isn't), so agents use the platform's default. |

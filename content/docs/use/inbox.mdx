@@ -1,0 +1,84 @@
+---
+title: The inbox
+description: How Pi Agent Interface's sidebar sorts every conversation by what it needs from you, and how to pin, snooze, settle, archive, rename, search and delete conversations.
+---
+
+The sidebar is one list of every conversation with every one of your agents, sorted by what each needs from you. Agents keep working while you are elsewhere, so the inbox is how you notice a reply that finished, a reply that failed, or a snooze that ran out.
+
+<Screenshot slot="inbox-sidebar" />
+
+## Sections
+
+| Section | What is in it |
+|---|---|
+| **Pinned** | Conversations you pinned, in the order you pinned them. |
+| **Working** | Conversations whose agent is writing a reply now, with a timer. |
+| **Inbox** | Everything else. Conversations that need you come first, then the most recent activity. Empty, it says **All caught up.** |
+| **Snoozed** | A shelf: conversations hidden until a time you chose, soonest first. |
+| **Settled** | A shelf: conversations you are finished with, most recently settled first. |
+| **Archived** | A shelf: conversations put away until you restore them. |
+
+The shelves start closed, with a count, for example **Snoozed (2)**; select one to open it. This browser remembers which are open. A closed shelf still shows the conversation you have open, so it never vanishes from under you.
+
+When you have more than one agent, buttons above the list (**All**, then each agent) show only one agent's conversations.
+
+## A row
+
+Each row in Pinned, Working and Inbox has three lines: the agent's avatar and name, the conversation's title (brighter when there is something new in it), and how long ago something happened (**now**, **5m**, **3h**, **2d**). A pin marks pinned rows. Rows on the shelves are one line: the title, and the time left on a snooze or how long ago it was settled.
+
+The corner of a row says what the conversation needs:
+
+| Status | Means |
+|---|---|
+| **Working**, with a timer | The agent is writing a reply. The row is dimmed until you look at it. |
+| **Done** | A reply finished since you last looked. |
+| **Failed** | A reply failed since you last looked, or the agent dropped your message without answering. |
+| **Woke** | A snooze ended and you haven't looked yet. |
+
+Done and Failed are the conversations that need you. The browser tab's title counts them, for example **(2) Pi Agent Interface**. Opening the conversation clears its status.
+
+Whether an agent is working, and when its last reply finished or failed, comes from the platform as it happens, whichever device or tab started the work. A reply that finished while the app was closed shows as **Done** when you come back.
+
+## Acting on a conversation
+
+Point at a row to see **Pin**, **Snooze**, **Settle** and **More actions** (…). Right-clicking a row opens the same menu as **More actions**. On a touch screen, **More actions** is always shown and its menu has everything.
+
+<Screenshot slot="inbox-row-menu" />
+
+| Action | Does |
+|---|---|
+| **Pin** / **Unpin** | Keeps it at the top. Pinning also brings it back from Snoozed, Settled or Archived. |
+| **Snooze** | Hides it until a time: **In 1 hour**, **In 3 hours**, **This evening** (while that is more than an hour away), **Tomorrow**, **Next week** (Monday morning), or **Custom…**. Each shows the time it wakes. |
+| **Settle** | Puts it on the Settled shelf: you are finished with it. Settling lets go of a pin and a snooze. |
+| **Mark unread** | Marks it **Done** again, as if you hadn't seen the last reply. |
+| **Archive** | Puts it on the Archived shelf. |
+| **Rename…** | Gives it a name of your own. See below. |
+| **Delete…** | Deletes it from the agent for good. A red **Delete** appears in the row; select it within a few seconds to confirm. |
+
+**Settle** and **Archive** are turned off while the agent is working: stop it first. Settling, snoozing or archiving the conversation you have open moves you on to the next one in the list, or to a new chat.
+
+**Pin**, **Unpin**, **Snooze**, **Settle** and **Archive** say what they did, with **Undo** for a few seconds. **Delete** can't be undone.
+
+<Screenshot slot="inbox-snooze" />
+
+### How conversations come back
+
+- **Snoozed** ones come back at their time, or **sooner if the agent finishes or fails** in the meantime: a snooze hides a conversation, not what it has to say. **Wake now** brings one back early.
+- **Settled** ones come back to the Inbox when anything new happens in them: a message, a finished reply. **Un-settle** brings one back by hand.
+- **Archived** ones stay put whatever happens, until you **Restore** them.
+
+To restore or delete many settled or archived conversations at once, use [Settings → Conversations](/docs/use/settings#conversations).
+
+## Rename a conversation
+
+A conversation's title starts as the beginning of your first message. **Rename…** opens **Rename conversation**: type a name of up to 200 characters and select **Rename**. The name shows in your sidebar and search at once, on every device.
+
+## Search
+
+**Search conversations...** at the top of the sidebar filters your conversations by title as you type, across every section and shelf. Escape clears it. When nothing matches, the Inbox says **No conversations match.** Search looks at titles only, not at what was said.
+
+To start a chat or run a command from the keyboard, use the [command palette](/docs/use/keyboard-shortcuts#the-command-palette) (⌘ K or Ctrl K).
+
+## On every device
+
+What you do in the inbox (pinned, snoozed, settled, archived, read) is saved to your account, so it follows you to every browser and device you sign in on. If you change the same conversation on two devices, the later change wins, removals (an unpin, say) included. The shelves you have open, and the width of the sidebar, are remembered per browser.

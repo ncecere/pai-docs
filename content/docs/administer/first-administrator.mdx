@@ -1,0 +1,47 @@
+---
+title: The first administrator
+description: How a new Pi Agent Interface instance gets its first administrator with INITIAL_ADMIN_EMAIL, and how to recover from a lockout with the promote command.
+---
+
+A new instance has no administrators. Everyone who signs in is a **Member** until an administrator promotes them, so the first one comes from the deployment.
+
+## `INITIAL_ADMIN_EMAIL`
+
+Set `INITIAL_ADMIN_EMAIL` to the email address of the person who should run the instance, for example `morgan.lee@example.com`. When that person signs in, they become an administrator, but **only while there is no active administrator at all**. The comparison ignores case and surrounding spaces, and the address is the `email` claim your identity provider sends.
+
+The audit log records it: "Morgan Lee became the first administrator (INITIAL_ADMIN_EMAIL)". From then on, administrators promote others in [People](/docs/administer/people-and-roles). Leaving the variable set is harmless: once there is an active administrator, it does nothing, and if that person is later made a member, the change sticks.
+
+## Locked out: `admin:promote`
+
+If no one who can sign in is an administrator any more, make someone an administrator from the server. It needs only `DATABASE_URL` (and reads `.env.local` and `.env` too, if they exist).
+
+<Tabs items={['In the container', 'From a checkout']}>
+<Tab value="In the container">
+
+```sh
+node dist-server/cli.js promote morgan.lee@example.com
+```
+
+For example, `docker exec <container> node dist-server/cli.js promote morgan.lee@example.com`, or `kubectl exec deploy/pi-agent-interface -- node dist-server/cli.js promote morgan.lee@example.com`.
+
+</Tab>
+<Tab value="From a checkout">
+
+```sh
+pnpm admin:promote morgan.lee@example.com
+```
+
+</Tab>
+</Tabs>
+
+It applies any pending database migrations, then makes the person with that email (ignoring case) an **active administrator**, restoring them if they were suspended:
+
+```text
+Morgan Lee is now an administrator.
+```
+
+The person must have signed in once. If not, it says "No one with the email morgan.lee@example.com has signed in yet. They must sign in once first." and exits with an error. The audit log records "Morgan Lee was made an administrator from the server (recovery command)". A running server notices the change within about ten seconds.
+
+## There is always an administrator
+
+The app refuses any change that would leave no active administrator: making the last one a member, or suspending them, fails with "There must always be at least one active administrator." Nobody can suspend themselves.

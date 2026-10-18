@@ -1,0 +1,61 @@
+---
+title: Upgrades and backups
+description: Moving Pi Agent Interface to a new version, and what to back up — the app's own database, its secrets, and the agent platform.
+---
+
+## Upgrading
+
+<Steps>
+<Step>
+
+### Read the release notes
+
+Read the notes of every release between your version and the target in [Releases](/docs/releases), for new settings, migrations and anything to do by hand.
+
+</Step>
+<Step>
+
+### Back up the database
+
+Take a backup of the app's PostgreSQL (below). Migrations only go forward: going back to an older version past a migration means restoring this backup.
+
+</Step>
+<Step>
+
+### Replace the image and restart
+
+Start the new version with the same configuration. It applies its migrations when it starts, before it listens, and logs them (`[server] database migrated: …`). If a new setting is required, the server stops and names it.
+
+</Step>
+</Steps>
+
+People's conversations aren't affected: they live on the platform. Sessions carry on across an upgrade unless the release notes say otherwise.
+
+### From v0.1.0
+
+v0.1.0 had no database. The version on `main` needs one: set `DATABASE_URL` (see [PostgreSQL and migrations](/docs/operate/database)), and set `INITIAL_ADMIN_EMAIL` so the instance gets its [first administrator](/docs/administer/first-administrator). See the [Unreleased notes](/docs/releases/unreleased#upgrading-from-v010) for the rest.
+
+## What to back up
+
+| What | Where | Why |
+|---|---|---|
+| **The app's database** | PostgreSQL, `DATABASE_URL` | People and roles, instance settings (branding, agent settings, provided agents, features), everyone's preferences and inbox state, the names of people's own agents, and the audit log. |
+| **The configuration** | Your environment or secret store | Especially `SESSION_SECRET`, `PLATFORM_SERVICE_KEY` and `OIDC_CLIENT_SECRET`. |
+| **The agent platform** | The platform's own database and agent storage | The agents, their memory and every conversation. Back it up as its own documentation says. |
+
+Back up the database with your usual PostgreSQL tools, for example:
+
+```sh
+pg_dump --format=custom --file=pai-$(date +%F).dump "$DATABASE_URL"
+pg_restore --clean --if-exists --dbname="$DATABASE_URL" pai-2026-10-18.dump
+```
+
+Restore into a stopped app, then start it.
+
+### What a lost database means
+
+The agents and conversations survive on the platform, and each person's agents are found again by their key when they next sign in. What is lost: roles (everyone is a member again, so set `INITIAL_ADMIN_EMAIL` or use [`admin:promote`](/docs/administer/first-administrator#locked-out-adminpromote) after people sign in), instance settings, preferences and inbox state, the audit log, and the list of people's own agents (their agents stay on the platform but no longer show in the app).
+
+### What a lost `SESSION_SECRET` means
+
+Only that everyone signs in again. Set a new one.

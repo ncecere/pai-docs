@@ -1,0 +1,85 @@
+---
+title: Kubernetes
+description: Notes for running Pi Agent Interface on Kubernetes — a Deployment, a Secret, probes, a restricted security context and an ingress that doesn't buffer event streams.
+---
+
+The repository has no Kubernetes manifests or Helm chart. The app is one container with a few needs, so a Deployment, a Service, a Secret and an ingress are enough. These notes cover what matters.
+
+## Secrets and settings
+
+Put `PLATFORM_SERVICE_KEY`, `SESSION_SECRET`, `OIDC_CLIENT_SECRET` and `DATABASE_URL` in a Secret, and the rest in the Deployment or a ConfigMap. See [Configuration](/docs/operate/configuration). The server reads them once at start: after changing one, restart the pods.
+
+## The Deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pi-agent-interface
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: pi-agent-interface }
+  template:
+    metadata:
+      labels: { app: pi-agent-interface }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: app
+          image: ghcr.io/ncecere/pi-agent-interface@sha256:...   # or your own build
+          ports:
+            - { name: http, containerPort: 8080 }
+          envFrom:
+            - secretRef: { name: pi-agent-interface }
+          env:
+            - { name: APP_URL, value: https://chat.example.com }
+            - { name: PLATFORM_URL, value: https://agents.example.com }
+            - { name: PLATFORM_TEAM, value: pi-agent-interface }
+            - { name: OIDC_ISSUER, value: https://sso.example.com/application/o/pai/ }
+            - { name: OIDC_CLIENT_ID, value: pi-agent-interface }
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+          readinessProbe:
+            httpGet: { path: /readyz, port: http }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+```
+
+- **Non-root.** The image runs as `node`, uid 1000. It needs no capabilities, and the server writes nothing to disk, so the root filesystem can be read-only.
+- **Probes.** `/healthz` answers whenever the server is up; `/readyz` also needs the database. Neither calls the agent platform.
+- **Resources.** The request above is a starting point, not a measurement.
+
+## More than one replica
+
+The server keeps no session state of its own (sessions are encrypted cookies) and migrates the database under a PostgreSQL advisory lock, so replicas starting together don't race. Some things are per process, though: the per-person limits on open streams, the connection to the platform's event stream, and the few seconds' caches of people, branding, models and templates. Running more than one replica hasn't been tested; one replica is the tested setup.
+
+## The ingress
+
+The ingress must not buffer or time out the server-sent event streams (`/api/events` and `/api/agents/*/threads/*/events`). With ingress-nginx:
+
+```yaml
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+```
+
+Keep `APP_URL` equal to the ingress's public https address. See [Behind a reverse proxy](/docs/operate/container#behind-a-reverse-proxy).
+
+## Lockout recovery
+
+```sh
+kubectl exec deploy/pi-agent-interface -- node dist-server/cli.js promote morgan.lee@example.com
+```
+
+See [The first administrator](/docs/administer/first-administrator#locked-out-adminpromote).

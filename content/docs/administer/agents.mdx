@@ -1,0 +1,50 @@
+---
+title: Agents
+description: Choosing the default model, how many agents people may make, whether they choose the model, which templates they may use, and the provided agents everyone gets in Pi Agent Interface.
+---
+
+**Admin → Agents** decides which agents people have and what they run on. The agents live on the agent platform; the models and templates offered here are the ones the platform offers this app's team. If the platform can't be reached, the page says so instead.
+
+<Screenshot slot="admin-agents" />
+
+## Everyone's agents
+
+| Setting | Default | Does |
+|---|---|---|
+| **Default model** | `AGENT_MODEL`, or the platform's default | What agents run on unless chosen otherwise. The list holds the models published to the team and enabled. Unset, it falls back to `AGENT_MODEL` (shown as **AGENT_MODEL (*name*)**) and then to **Platform's default**. |
+| **Agents each person may make** | 5 | Their own agents, besides the provided ones: 0 to 50. **0** turns making agents off. |
+| **People choose the model** | On | For agents they make. Off: those run on the default model, and people can't move them to another. |
+| **Templates people may make agents from** | **Every template, including ones added later** | Templates come from the agent platform: its catalog, and your team's own (marked **· your team**). Untick **Every template…** to choose some. |
+
+**Save** applies the changes; **Discard** drops them.
+
+### How the default model is applied
+
+- New agents are made on the default model, unless a provided agent or the person chose another.
+- Each person's copies of the provided agents are moved to the model they should be on (the provided agent's own, else the default) the next time that person opens the app. The change takes effect from the agent's next start; an agent at work isn't interrupted. Agents people made themselves keep the model they were made on until their person changes it.
+- Only a model that is published to the team and enabled is ever set: an agent on an unpublished model wouldn't start. If the model can't be found, agents are left as they are, and the server's log says so once. If a move fails, it is logged and tried again five minutes later; nobody is kept from their agent.
+
+The models and templates are read from the platform at most every five minutes, so a model just published may take that long to appear.
+
+## Provided agents
+
+Agents everyone gets. Each person has their own copy, with private conversations. The first is the built-in assistant (**· built in**), whose name comes from `AGENT_NAME` (default **Assistant**) until you change it here. It can be renamed and changed but not removed.
+
+**Add a provided agent** (up to 20 in all) or the pencil on a row opens the editor:
+
+| Field | Does |
+|---|---|
+| **Name** | Up to 60 characters, for example "HR Helper". |
+| **What it's for** | Up to 500 characters, shown under its name, for example "Questions about benefits and leave". |
+| **Template** | A template from the platform, or **The default template** (the template named by `AGENT_TEMPLATE`, else the platform's default). |
+| **Model** | A published model, or **The default model**. |
+
+<Screenshot slot="admin-provided-agent" />
+
+Changes reach each person's copy the next time they open the app; a new model applies from the agent's next start. The name and description people see change with it. A copy is made from its template once, when it is first made (the platform keeps an existing agent as it is), so a change of template applies only to copies made after it.
+
+Removing a provided agent (the bin on its row) takes it out of the app for everyone: "*HR Helper* removed. People's existing copies stay on the platform until deleted there." The team's owners can delete them in the platform's console.
+
+## On the platform
+
+Each agent the app makes is named for the team's owners, who see every person's agent in the platform's console: "*Assistant* · *Priya Shah*", with the person's email in its description. The team's owners can disable or delete agents there. A person's own agent deleted on the platform disappears from their My agents.

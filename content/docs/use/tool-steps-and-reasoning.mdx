@@ -1,0 +1,35 @@
+---
+title: Tool steps and reasoning
+description: The block above a reply in Pi Agent Interface that shows what the agent thought and which tools it used, live while it works and afterwards.
+---
+
+Agents think before they answer, and they use tools: they run a command, read or edit a file, search, fetch a web page, look at the clock. Everything a reply did before its answer is gathered into **one collapsed block** at the top of the reply, so the answer reads cleanly however many steps it took.
+
+<Screenshot slot="chat-tool-steps" />
+
+## The block's heading
+
+- A reply that only thought shows **Reasoning**. Select it to read the thinking in full.
+- A reply that used tools shows a one-line summary, for example **Thought · used get_time**, or **Worked · 3 steps** when it did several kinds of thing. Failures are named: **a step failed**, **a step was stopped** (still running when the reply ended).
+- Select the heading to open a timeline of every piece of reasoning and every tool step, in the order they happened.
+
+The heading is a button that says whether it is expanded, and the timeline is a list. Whether it is open is your choice, and it stays as you left it for the rest of the reply.
+
+## While the agent works
+
+The heading says what the agent is doing now, with a shimmer: **Thinking…**, or the tool it is using, such as **get_time · Asia/Tokyo…**. While it thinks, a small window under the heading shows the latest lines of its reasoning; select it to read everything so far. While it uses tools, its **latest three steps** show under the heading, so you can see what it is doing without opening the block.
+
+<Screenshot slot="chat-live-steps" />
+
+Screen readers hear each new activity as it starts ("Using get_time…"), once, not every word. Animation stops if your system asks for reduced motion.
+
+## A tool step
+
+Each step has an icon for the kind of tool, guessed from its name (a terminal for commands, a document for reading files, a pen for writing them, a magnifier for searches, a globe for the web, a clock for times, a wrench for anything else), and what it acted on: the command, the file, the address or the query, for example **get_time · Asia/Tokyo** or **read · src/main.ts**. A spinner shows while it runs, and a failed step is red and ends in **failed**.
+
+Opened, a step shows:
+
+- **Input**: a command as `$ command`, simple inputs as names and values, anything else as JSON.
+- **Output** (**Output so far** while it runs): JSON indented, anything else as it came, with **Copy**. Long output is cut short, with **Show all (*n* characters)**. A step with nothing to show says **No output.** or **The tool failed.**
+
+Under the timeline, a note reminds you that some models hide parts of their thinking, so you may see a summary or partial reasoning.

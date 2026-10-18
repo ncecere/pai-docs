@@ -1,0 +1,39 @@
+---
+title: Operate
+description: What it takes to run Pi Agent Interface — a Pi Durable platform team, an identity provider, PostgreSQL and one container.
+---
+
+Pi Agent Interface is one Node.js server, in one container image, that serves the web app and its API. It needs:
+
+| Needs | For | See |
+|---|---|---|
+| **A Pi Durable platform** with a team, an editor service account and its key, and a model published to the team | The agents and their conversations | [The agent platform](/docs/operate/platform) |
+| **An OpenID Connect provider** with a confidential client | Sign-in | [Sign-in](/docs/operate/sign-in) |
+| **PostgreSQL** | People, roles, settings, preferences and the audit log | [PostgreSQL and migrations](/docs/operate/database) |
+| **A reverse proxy or ingress** that terminates TLS and doesn't buffer event streams | The public https address | [The container image](/docs/operate/container#behind-a-reverse-proxy) |
+
+The server is configured with environment variables, checked when it starts: an incomplete or unsafe configuration stops it with every problem listed. See [Configuration](/docs/operate/configuration).
+
+```text
+browser ──https──▶ reverse proxy ──▶ Pi Agent Interface (:8080) ──https + service key──▶ Pi Durable platform
+                                        │
+                                        └──▶ PostgreSQL
+```
+
+## Install
+
+<Cards>
+  <Card title="The agent platform" href="/docs/operate/platform">The team, the service account and what the app calls on the platform.</Card>
+  <Card title="Configuration" href="/docs/operate/configuration">Every environment variable and how it is checked.</Card>
+  <Card title="Sign-in" href="/docs/operate/sign-in">Setting up the OpenID Connect client.</Card>
+  <Card title="The container image" href="/docs/operate/container">Building and running it as a non-root user, and the reverse proxy.</Card>
+  <Card title="Kubernetes" href="/docs/operate/kubernetes">Notes for a Deployment, probes and an ingress.</Card>
+</Cards>
+
+## Run
+
+<Cards>
+  <Card title="PostgreSQL and migrations" href="/docs/operate/database">What the app stores and how its schema is migrated.</Card>
+  <Card title="Security" href="/docs/operate/security">Sessions, CSRF and origin checks, ownership checks and limits.</Card>
+  <Card title="Upgrades and backups" href="/docs/operate/upgrades-and-backups">Moving to a new version, and what to back up.</Card>
+</Cards>

@@ -1,0 +1,91 @@
+---
+title: Configuration
+description: Every Pi Agent Interface environment variable, its default, and exactly how the server checks it when it starts.
+---
+
+Pi Agent Interface reads its configuration from environment variables once, when it starts. Everything else (the default model, provided agents, branding, optional features) is set by administrators in the [admin dashboard](/docs/administer) and stored in PostgreSQL.
+
+## How settings are read
+
+- **Environment variables.** In development, the server also reads `.env.local` and then `.env` from its working directory, when they exist; a real environment variable wins over both. The container image ignores these files when it is built (`.dockerignore`), so pass settings to the container as environment variables.
+- **Values are trimmed**: surrounding spaces are ignored, and a value of only spaces counts as empty.
+- **Every problem at once.** If anything is missing or unsafe, the server doesn't start, and prints every problem:
+
+  ```text
+  Error: Configuration:
+    - SESSION_SECRET must be at least 32 characters
+    - PLATFORM_SERVICE_KEY is required
+    - APP_URL must use https outside local development
+  ```
+
+A **loopback** address below means a URL whose host is `localhost`, `127.0.0.1` or `[::1]`.
+
+## The app
+
+| Variable | Default | Checked |
+|---|---|---|
+| `APP_URL` | `http://localhost:5177` | Where people open the app, for example `https://chat.example.com`. Must be a URL ("APP_URL is not a URL"), and https unless it is loopback ("APP_URL must use https outside local development"). Its origin is the only one allowed to write; the sign-in redirect is `<APP_URL>/auth/callback`. Keep it equal to the public address. |
+| `HOST` | `127.0.0.1` | The address to listen on. The container image sets `0.0.0.0`. Not checked. |
+| `PORT` | `5178` | The port to listen on. The container image sets `8080`. Not checked: use a port number. |
+| `STATIC_DIR` | none | Serves the built web app from this directory, with every other path answered by its `index.html`. The container image sets `/app/dist`; `pnpm start` uses `dist`. Without it, the server serves only the API (development, where Vite serves the web app). |
+| `APP_NAME` | none | The app's name until an administrator saves [Branding](/docs/administer/branding); then Branding's name wins. Empty: **Pi Agent Interface**. Not checked. |
+
+## The agent platform
+
+See [The agent platform](/docs/operate/platform) for what to set up there.
+
+| Variable | Default | Checked |
+|---|---|---|
+| `PLATFORM_URL` | none (required) | The platform's address, for example `https://agents.example.com`. Must be a URL, and https unless it is loopback ("PLATFORM_URL must use https (the service key travels with every request)"). |
+| `PLATFORM_TEAM` | none (required) | The team's slug, for example `pi-agent-interface`. Required ("PLATFORM_TEAM is required"); its value isn't checked until the first call. |
+| `PLATFORM_SERVICE_KEY` (secret) | none (required) | The team service account's key, `pdp_sa_…`, role editor. Required; never sent to browsers. A wrong key shows up at the first call, as "The agent platform refused this app's service key." |
+| `AGENT_TEMPLATE` | empty | The slug of the platform template the built-in assistant (and any provided agent left on **The default template**) is made from. Empty: the platform's default. Not checked at start. |
+| `AGENT_NAME` | `Assistant` | The built-in assistant's name until an administrator renames it in Admin → Agents. |
+| `AGENT_MODEL` | empty | The default model, by name or id, until an administrator picks one in Admin → Agents (which wins). Only a model currently published to the team and enabled is ever set; if it isn't one, agents are left on their model and the log says so once. Empty: the platform decides (the template's model, then its default). |
+
+## Sign-in
+
+At least one way to sign in is required: OIDC, or `DEV_AUTH` on a loopback `APP_URL` ("Configure OIDC_* for sign-in (or DEV_AUTH=true locally)"). See [Sign-in](/docs/operate/sign-in).
+
+| Variable | Default | Checked |
+|---|---|---|
+| `OIDC_ISSUER` | none | Your identity provider's issuer URL. Must be a URL, and https unless it is loopback ("OIDC_ISSUER must use https"). Discovery happens at the first sign-in, so a wrong issuer shows up then, in the log. |
+| `OIDC_CLIENT_ID` | none | The client's ID. |
+| `OIDC_CLIENT_SECRET` (secret) | none | The client's secret. The three `OIDC_*` above go together: any one set without the others stops the server ("OIDC_ISSUER, OIDC_CLIENT_ID and OIDC_CLIENT_SECRET go together"). |
+| `OIDC_SCOPES` | `openid profile email` | The scopes asked for, separated by spaces. Used only with OIDC. |
+| `DEV_AUTH` | `false` | Exactly `true` turns on the development accounts Tim, Bob and Sally (`tim@example.test` and so on), with no password. Refused unless `APP_URL` is loopback ("DEV_AUTH requires a loopback APP_URL"). Any other value is off. |
+
+## Sessions
+
+| Variable | Default | Checked |
+|---|---|---|
+| `SESSION_SECRET` (secret) | none (required) | At least 32 characters ("SESSION_SECRET must be at least 32 characters"); generate one with `openssl rand -base64 48`. Encrypts session cookies. Changing it signs everyone out; nothing else depends on it. |
+| `SESSION_TTL_HOURS` | `168` (7 days) | How long a session lasts, in hours. A value that isn't a positive number is silently replaced by 168. A session isn't extended by use: people sign in again when it ends. |
+
+## Database and administration
+
+| Variable | Default | Checked |
+|---|---|---|
+| `DATABASE_URL` (secret) | none (required) | The app's own PostgreSQL, for example `postgres://pai:…@db.example.com:5432/pai`. Required; a wrong one fails when the server connects, before it listens. Migrated on start. See [PostgreSQL and migrations](/docs/operate/database). |
+| `INITIAL_ADMIN_EMAIL` | none | Becomes an administrator on signing in, while there is no active administrator. See [The first administrator](/docs/administer/first-administrator). |
+| `DISABLED_FEATURES` | empty | Optional features to turn off for good, comma-separated: `usage`, `myUsage` (case-sensitive). An unknown name stops the server (`DISABLED_FEATURES: there is no feature "…" (known: usage, myUsage)`). See [Features](/docs/administer/features). |
+
+## Set by the image
+
+The container image sets `NODE_ENV=production`, `HOST=0.0.0.0`, `PORT=8080` and `STATIC_DIR=/app/dist`. Override them only if you have a reason to.
+
+## A production example
+
+```sh title="pai.env"
+APP_URL=https://chat.example.com
+PLATFORM_URL=https://agents.example.com
+PLATFORM_TEAM=pi-agent-interface
+PLATFORM_SERVICE_KEY=pdp_sa_...
+AGENT_MODEL=Chat model
+DATABASE_URL=postgres://pai:...@db.example.com:5432/pai
+SESSION_SECRET=...            # openssl rand -base64 48
+OIDC_ISSUER=https://sso.example.com/application/o/pai/
+OIDC_CLIENT_ID=pi-agent-interface
+OIDC_CLIENT_SECRET=...
+INITIAL_ADMIN_EMAIL=morgan.lee@example.com
+```

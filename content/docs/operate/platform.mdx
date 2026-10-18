@@ -1,0 +1,80 @@
+---
+title: The agent platform
+description: What Pi Agent Interface needs on the Pi Durable platform — a team, an editor service account and a published model — and every call it makes there.
+---
+
+Pi Agent Interface is a front end for one team on a [Pi Durable platform](https://github.com/ncecere/pi-durable-platform) (pi-durable-platform). The agents and their conversations live on the platform. People never sign in to the platform: the app's server reaches it for them with the team's **service account** key, set in `PLATFORM_*`, which never leaves the server.
+
+<Callout title="Coming in v0.2.0">
+  People will be able to [connect their own platform account](/docs/use/connect-your-platform-account) instead, so their agents live in their personal workspace. This page describes how the app works today.
+</Callout>
+
+## What to set up on the platform
+
+<Steps>
+<Step>
+
+### A team
+
+A team for the app, for example `pi-agent-interface`. Its slug goes in `PLATFORM_TEAM`. Every agent the app makes, for everyone, is made in this team.
+
+</Step>
+<Step>
+
+### A service account with role editor, and a key
+
+A service account in the team with the **editor** role (needed to create agents), and a key for it (`pdp_sa_…`). The key goes in `PLATFORM_SERVICE_KEY`. Treat it as a secret: it reaches every agent the app has made, for every person.
+
+</Step>
+<Step>
+
+### A model published to the team
+
+At least one model published to the team. Name it in `AGENT_MODEL` (by name or id), or choose it later in [Admin → Agents](/docs/administer/agents). Without one, every agent answers from the platform's default model, which out of the box is a scripted demo model.
+
+</Step>
+</Steps>
+
+The platform must be reached over https, because the key travels with every request (`http://` is accepted only for `localhost`, `127.0.0.1` and `[::1]`). See [Configuration](/docs/operate/configuration#the-agent-platform).
+
+## How people are kept apart
+
+The service key can reach every person's agents, so the app checks, on every request that names an agent, that the agent is the signed-in person's own. Each agent the app makes has an **external key** that names its person:
+
+| Agent | Key on the platform |
+|---|---|
+| A person's built-in assistant | `u:<person>` |
+| Their copy of another provided agent | `u:<person>:m:<id>` |
+| An agent they made themselves | `u:<person>:p:<slot>` |
+
+`<person>` is the person's ID in the app: a hash of their identity provider's issuer and subject. An agent whose key doesn't start with the signed-in person's `u:<person>` is answered as not found. Events from the platform's shared event stream are passed only to the person whose agent they concern, by the same check.
+
+These are **service-managed** agents: only the team's service accounts talk to them. The team's owners and admins see them in the platform's console, named "*Assistant* · *Priya Shah*" with the person's email in the description, with their status and last use, but not their conversations, and can disable or delete them.
+
+## What the app calls
+
+Every request carries `Authorization: Bearer <PLATFORM_SERVICE_KEY>`. `{team}` is `PLATFORM_TEAM`.
+
+| Call | When |
+|---|---|
+| `GET /v1/teams/{team}/models` | The models published to the team (read at most every 5 minutes). |
+| `GET /v1/agent-templates` and `GET /v1/teams/{team}/agent-templates` | The templates the team may use: the platform's catalog and the team's own (at most every 5 minutes). |
+| `GET /v1/agents?includeManaged=true` | Every agent the app manages, to find each person's (at most every 10 seconds). |
+| `PUT /v1/teams/{team}/agents/by-key/{key}` | Makes a person's agent the first time; returns the existing one after that. |
+| `GET /v1/agents/{agent}` | Reads an agent, to check whose it is. |
+| `PATCH /v1/agents/{agent}` | Renames an agent or moves it to another model, with its revision in `If-Match`. |
+| `DELETE /v1/agents/{agent}` | Deletes a person's own agent and its conversations. |
+| `GET /v1/agents/{agent}/threads` | Lists an agent's conversations. |
+| `GET`, `PATCH`, `DELETE /v1/agents/{agent}/threads/{thread}` | Reads, renames or deletes a conversation. |
+| `POST /v1/agents/{agent}/threads/{thread}/messages` | Sends a message (with a `requestId`, so a retried send isn't sent twice). |
+| `POST /v1/agents/{agent}/threads/{thread}/stop` | Stops a reply. |
+| `GET /v1/agents/{agent}/threads/{thread}/events` | Follows one open conversation (server-sent events). |
+| `GET /v1/agents/events` | One connection for the whole server, open while anyone has the app open (it closes a minute after the last person leaves), that says when conversations are created, renamed, start or finish a reply, or are deleted. |
+| `GET /v1/teams/{team}/usage` | The usage report, for [Admin → Usage](/docs/administer/usage) and Settings → Usage. |
+
+Conversation requests are relayed as they are, with the platform's answers passed back. If the platform refuses the key (401 or 403), people see "The agent platform refused this app's service key." and the server's log says so; if it can't be reached, "The agent platform could not be reached."
+
+## Load on the platform
+
+- An open conversation keeps its agent awake. A conversation in a tab that has been hidden for a minute, with the agent idle, lets go so the agent can hibernate.
+- One person can have at most 8 conversations open at once (each a stream to the platform) and 6 tabs following their inbox. See [Security](/docs/operate/security#limits).

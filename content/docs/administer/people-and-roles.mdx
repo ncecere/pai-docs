@@ -1,0 +1,33 @@
+---
+title: People and roles
+description: Everyone who has signed in to Pi Agent Interface, their roles, and suspending and restoring people.
+---
+
+**Admin → People** lists everyone who has signed in, most recently seen first: their name and email, **Role**, **Status** and **Last seen**. **Search by name or email** narrows the list. There are no invitations: a person appears the first time they sign in with your identity provider, as a **Member**.
+
+<Screenshot slot="admin-people" />
+
+## Roles
+
+| Role | Can |
+|---|---|
+| **Member** | Use the app: their own agents, conversations and Settings. |
+| **Administrator** | Everything a member can, and the [admin dashboard](/docs/administer). |
+
+Roles belong to Pi Agent Interface, not to your identity provider or the agent platform: being an administrator here gives no rights on the platform, and the identity provider's groups aren't read.
+
+## Changing someone
+
+The **…** button on a row (**Actions for *name***) offers:
+
+- **Make administrator** or **Make member**.
+- **Suspend…**, after asking: "They're signed out everywhere at once and can't sign in again until restored. Their agents and conversations are kept." Suspended people see "Your account is suspended. Ask an administrator to restore it." when they try to sign in.
+- **Restore**, for someone suspended.
+
+A change of role, a suspension and **Sign out everywhere** reach the person's open sessions within about ten seconds. You can't suspend yourself, and the last active administrator can't be made a member or suspended.
+
+Every change is in the [audit log](/docs/administer/audit-log): "Morgan Lee made Sam Ortiz an administrator", "Morgan Lee suspended Sam Ortiz".
+
+## Names and emails
+
+A person's name and email come from your identity provider each time they sign in (the `name` claim, else `preferred_username`, else the email). A person is recognised by their identity provider and subject, not by their email, so a changed email address keeps the same person and the same agents. People can't be deleted from the app.

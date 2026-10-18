@@ -1,0 +1,23 @@
+---
+title: Usage
+description: How much each person's agents use their models in Pi Agent Interface — requests, tokens and an estimated cost from the agent platform's usage report.
+---
+
+**Admin → Usage** shows how much each person's agents use their models over the last **7 days**, **30 days** or **90 days**. It is an [optional feature](/docs/administer/features), **Usage**, on by default; while it is off, the page isn't in the admin page list.
+
+<Screenshot slot="admin-usage" />
+
+The page opens with **Requests**, **Tokens** (in and out), **Estimated cost** and **People** whose agents were used, then **Tokens per day** as bars, then a table **By person**: **Agents** used, **Requests**, **Tokens in**, **Tokens out** and **Est. cost**, the heaviest users first.
+
+## Where the numbers come from
+
+The figures come from the agent platform's usage report for the app's team (`GET /v1/teams/{team}/usage`), read each time the page opens. Every agent the app makes carries a key that names its person, so the platform's rows are summed per person. Rows that name nobody here (agents made in the team by hand, deleted agents, or a person no longer here) are summed as **Other agents**.
+
+- **Days are in UTC**, ending today.
+- **The cost is an estimate** from the prices the platform has for each model. A dash means none of the requests were to priced models; a **+** after a cost means some requests weren't priced and aren't in it. Cost appears once the platform has prices for the models.
+
+If the platform's report can't be read, the page says "The usage report could not be read" and why. A platform without the usage report is a reason to lock the feature off with `DISABLED_FEATURES=usage`.
+
+## People's own usage
+
+With **Personal usage** on, everyone sees their own figures in [Settings → Usage](/docs/use/settings#usage), per agent and per day, named as they know their agents. Nobody sees anyone else's.

@@ -1,0 +1,18 @@
+{
+  "title": "Use",
+  "description": "Chatting with your agents and working through the inbox",
+  "root": true,
+  "pages": [
+    "index",
+    "---In a conversation---",
+    "chat",
+    "tool-steps-and-reasoning",
+    "---Across conversations---",
+    "inbox",
+    "keyboard-shortcuts",
+    "---Your agents and settings---",
+    "agents",
+    "settings",
+    "connect-your-platform-account"
+  ]
+}

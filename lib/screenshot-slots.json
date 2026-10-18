@@ -1,0 +1,165 @@
+{
+  "sign-in": {
+    "files": [
+      "sign-in"
+    ],
+    "alt": "The Example Corp Agents sign-in page: the Face mark beside the name, \"Sign in to talk to your agents.\", and a card with the button \"Sign in with single sign-on\"."
+  },
+  "sign-in-dev": {
+    "files": [
+      "sign-in-dev"
+    ],
+    "alt": "The sign-in page of a local instance with DEV_AUTH on: under \"Development accounts\" (\"Local development only. These accounts have no password.\") the buttons Tim, Bob and Sally with their example.test addresses."
+  },
+  "chat-home": {
+    "files": [
+      "chat-home"
+    ],
+    "alt": "The start page for Priya Shah: the Assistant's large avatar and \"What should Assistant work on, Priya?\", the agent buttons Assistant, HR Helper and Research helper, \"Make your own agent\", \"Recent with Assistant\" with five conversations, and the sidebar inbox on the left."
+  },
+  "chat-agent-picker": {
+    "files": [
+      "chat-agent-picker"
+    ],
+    "alt": "The agent picker open above the message box: \"Search agents...\", the group Provided (Assistant, HR Helper \"Questions about benefits and leave\") and the group Yours (Research helper), and \"Make or manage your agents\" at the foot."
+  },
+  "chat-conversation": {
+    "files": [
+      "chat-conversation"
+    ],
+    "alt": "A finished conversation with Assistant: Priya's question, the reply with a collapsed work block \"Thought · used get_time\", Markdown with a heading, a list and a table, and Copy message and Send again under the reply."
+  },
+  "chat-tool-steps": {
+    "files": [
+      "chat-tool-steps"
+    ],
+    "alt": "A reply's work block expanded: a timeline of reasoning, the tool step \"get_time · Asia/Tokyo\" opened to show its Input and indented JSON Output with Copy, then more reasoning, and the answer below."
+  },
+  "chat-live-steps": {
+    "files": [
+      "chat-live-steps"
+    ],
+    "alt": "An agent at work: the block heading shimmering with the current tool step, its latest three steps listed under the heading with a spinner on the running one, and \"Working\" with a timer on the conversation's row in the sidebar."
+  },
+  "chat-reply-failed": {
+    "files": [
+      "chat-reply-failed"
+    ],
+    "alt": "A failed reply: the note \"This reply failed. The model is busy or over its limit right now. Try again in a minute.\" with Details opened to show the provider's raw error, and Try again."
+  },
+  "inbox-sidebar": {
+    "files": [
+      "inbox-sidebar"
+    ],
+    "alt": "The sidebar inbox: New Chat, Search conversations..., agent buttons All, Assistant, HR Helper and Research helper, then Pinned (one row), Working (one row with a timer), Inbox (rows marked Done and Failed at the top, then others with times such as 5m, 3h, 2d), and the closed shelves Snoozed (2), Settled (4) and Archived (3)."
+  },
+  "inbox-row-menu": {
+    "files": [
+      "inbox-row-menu"
+    ],
+    "alt": "A conversation's More actions menu open in the sidebar: Settle, Snooze, Pin, Mark unread, Archive, Rename… and Delete…."
+  },
+  "inbox-snooze": {
+    "files": [
+      "inbox-snooze"
+    ],
+    "alt": "The Snooze menu of a conversation: In 1 hour, In 3 hours, This evening, Tomorrow and Next week, each with its wake time, and Custom…."
+  },
+  "command-palette": {
+    "files": [
+      "command-palette"
+    ],
+    "alt": "The command palette open with \"hr\" typed: under Agents \"New chat with HR Helper\", and under Actions \"Ask Assistant: “hr”\"."
+  },
+  "phone-inbox": {
+    "files": [
+      "phone-inbox"
+    ],
+    "alt": "The sidebar as a panel on a phone: the inbox with Pinned, Working and Inbox rows, each with its More actions button shown, and New Chat and the user menu at the foot.",
+    "phone": true
+  },
+  "settings-account": {
+    "files": [
+      "settings-account"
+    ],
+    "alt": "Settings → Account for Priya Shah: her initials, name, email and Member on the left with the Keyboard shortcuts card; Profile (Name, Email, Role) and Sessions (Sign out, Sign out everywhere)."
+  },
+  "settings-customization": {
+    "files": [
+      "settings-customization"
+    ],
+    "alt": "Settings → Customization: Look (Appearance Light, Dark, System; Accent Neutral, Blue, Violet, Emerald), Agents (Avatar style Face, Signal, Pixel, animated), and Typing and reading (Enter adds a new line, Wrap long code lines)."
+  },
+  "settings-my-agents": {
+    "files": [
+      "settings-my-agents"
+    ],
+    "alt": "Settings → My agents: Your agents with Research helper (\"Research assistant · Fast model\") and \"1 of 5 made\", New agent, and Provided for you with Assistant and HR Helper, each with New chat."
+  },
+  "settings-new-agent": {
+    "files": [
+      "settings-new-agent"
+    ],
+    "alt": "The New agent dialog: Name \"Trip planner\", Start from with two templates (General assistant chosen, Research assistant), Model with \"Chat model (default)\", and Make agent."
+  },
+  "settings-conversations": {
+    "files": [
+      "settings-conversations"
+    ],
+    "alt": "Settings → Conversations: Archived and Settled lists with dates and agent names, two settled conversations ticked, and Move to inbox and Delete."
+  },
+  "settings-usage": {
+    "files": [
+      "settings-usage"
+    ],
+    "alt": "Settings → Usage for the last 30 days: Requests, Tokens, Estimated cost and Agents, Tokens per day as bars, and By agent with Assistant and Research helper."
+  },
+  "admin-overview": {
+    "files": [
+      "admin-overview"
+    ],
+    "alt": "Admin → Overview: People, Active today, Administrators and Suspended, and Recent changes from the audit log, with the admin page list (Overview, People, Agents, Branding, Features, Usage, Audit log) on the left."
+  },
+  "admin-people": {
+    "files": [
+      "admin-people"
+    ],
+    "alt": "Admin → People: the table Person, Role, Status and Last seen, with Morgan Lee (you) and Sam Ortiz as Administrator, one Suspended person, and a row's actions menu open with Make administrator and Suspend…."
+  },
+  "admin-agents": {
+    "files": [
+      "admin-agents"
+    ],
+    "alt": "Admin → Agents: Everyone's agents (Default model Chat model, Agents each person may make 5, People choose the model on, Templates with every template ticked) and Provided agents (Assistant · built in, HR Helper)."
+  },
+  "admin-provided-agent": {
+    "files": [
+      "admin-provided-agent"
+    ],
+    "alt": "The provided agent editor \"Edit HR Helper\": Name, What it's for \"Questions about benefits and leave\", Template and Model, with Save."
+  },
+  "admin-branding": {
+    "files": [
+      "admin-branding"
+    ],
+    "alt": "Admin → Branding: the Preview with the Face mark and \"Example Corp Agents\", Identity (Name, Logo empty) and Default look (Accent Neutral, Appearance Dark), with Discard and Save."
+  },
+  "admin-features": {
+    "files": [
+      "admin-features"
+    ],
+    "alt": "Admin → Features: Usage (on, \"On unless changed here.\") and Personal usage (on, \"Off unless changed here.\")."
+  },
+  "admin-usage": {
+    "files": [
+      "admin-usage"
+    ],
+    "alt": "Admin → Usage for 30 days: Requests, Tokens, Estimated cost and People, Tokens per day, and By person with several people and an Other agents row."
+  },
+  "admin-audit": {
+    "files": [
+      "admin-audit"
+    ],
+    "alt": "Admin → Audit log: entries such as \"Priya Shah signed in for the first time\", \"Morgan Lee became the first administrator (INITIAL_ADMIN_EMAIL)\", \"Morgan Lee made Sam Ortiz an administrator\" and \"Morgan Lee changed the branding\", with dates."
+  }
+}

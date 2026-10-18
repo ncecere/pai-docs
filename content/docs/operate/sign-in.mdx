@@ -1,0 +1,76 @@
+---
+title: Sign-in
+description: Setting up single sign-on for Pi Agent Interface with an OpenID Connect provider, and what the development accounts are for.
+---
+
+People sign in to Pi Agent Interface with your identity provider over **OpenID Connect**, and never to the agent platform. Use any provider that offers OpenID Connect discovery and confidential clients, such as authentik, Keycloak or Microsoft Entra ID (see [Tested with](#tested-with)).
+
+## Set up the client
+
+<Steps>
+<Step>
+
+### Create a confidential client
+
+In your identity provider, create an OpenID Connect client (an "application") for the app:
+
+- **Client type**: confidential, with a client secret.
+- **Grant**: authorization code. The app uses PKCE (S256), a `state` and a `nonce` as well.
+- **Redirect URI**: `<APP_URL>/auth/callback`, for example `https://chat.example.com/auth/callback`. It must match `APP_URL` exactly.
+- **Scopes**: `openid profile email`.
+
+</Step>
+<Step>
+
+### Configure the app
+
+```sh
+OIDC_ISSUER=https://sso.example.com/application/o/pai/
+OIDC_CLIENT_ID=pi-agent-interface
+OIDC_CLIENT_SECRET=...
+```
+
+The issuer is the URL whose `/.well-known/openid-configuration` the provider publishes. It must be https (except on `localhost`). Set `OIDC_SCOPES` only if your provider needs other scopes.
+
+</Step>
+<Step>
+
+### Sign in
+
+The sign-in page shows **Sign in with single sign-on**. The app finds the provider's endpoints at the first sign-in, so a wrong issuer shows up then: the sign-in page says "Single sign-on didn't complete. Try again, or ask an administrator." and the server's log has `[auth] sign-in failed` with the reason. A failed discovery is tried again on the next sign-in.
+
+</Step>
+</Steps>
+
+<Screenshot slot="sign-in" />
+
+## What the app takes from the ID token
+
+| Claim | Used for |
+|---|---|
+| `iss` and `sub` | Who the person is. Their ID in the app is a hash of the two, so it never changes while the provider and subject don't, and two providers' subjects can't collide. |
+| `email` | Their email: shown in the app, matched by `INITIAL_ADMIN_EMAIL` and `admin:promote`. |
+| `name`, else `preferred_username`, else `email` | Their name. |
+
+Name and email are updated at every sign-in. Anyone your provider lets sign in to the client can use the app, as a **Member**: restrict who may use it in the provider (an assignment or a group policy on the client). The app doesn't read groups.
+
+## Sign-in errors
+
+| The sign-in page says | Because |
+|---|---|
+| "Signing in took too long. Try again." | The round trip to the provider took more than 10 minutes. |
+| "Single sign-on didn't complete. Try again, or ask an administrator." | The provider returned an error, the code exchange or the ID token check failed, or discovery failed. See the server's log. |
+| "Your account is suspended. Ask an administrator to restore it." | An administrator [suspended](/docs/administer/people-and-roles) the person. |
+| "Your session ended. Sign in again to continue." | The session expired, the person signed out everywhere, or `SESSION_SECRET` changed. |
+
+After signing in, people return to the page that sent them to sign in.
+
+## Development accounts
+
+`DEV_AUTH=true` adds **Development accounts** to the sign-in page: **Tim**, **Bob** and **Sally**, with no password ("Local development only. These accounts have no password."). The server refuses to start with it unless `APP_URL` is `localhost`, `127.0.0.1` or `[::1]`, and the development sign-in itself only accepts requests from the app's own origin. Both can be on at once for local testing. Never use them on a reachable host.
+
+With neither OIDC nor `DEV_AUTH` the server doesn't start.
+
+## Tested with
+
+Single sign-on is tested against an in-process OpenID Connect provider (discovery, the redirect, PKCE, the code exchange and the ID token's signature, issuer, audience and nonce), not against a particular product.

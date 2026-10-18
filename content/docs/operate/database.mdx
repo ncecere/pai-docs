@@ -1,0 +1,36 @@
+---
+title: PostgreSQL and migrations
+description: What Pi Agent Interface keeps in its own PostgreSQL database, and how the schema is migrated when the server starts.
+---
+
+Pi Agent Interface has its own PostgreSQL database, separate from the agent platform's, named by `DATABASE_URL`. Conversations aren't in it: they live on the platform.
+
+## What is in it
+
+| Table | Holds |
+|---|---|
+| `people` | Everyone who has signed in: their ID, email, name, role, status, session version, when they first signed in and were last seen. |
+| `settings` | Instance settings as JSON: `branding`, `agents`, `provided` and `features`, with who changed each last and when. |
+| `user_prefs` | Each person's preferences as JSON: `appearance` (theme, accent, avatar style, typing and code wrapping) and `inbox` (pinned, snoozed, settled, archived, read). |
+| `personal_agents` | The agents people made themselves: each one's slot and the name its person gave it. The agent itself is on the platform. |
+| `audit_log` | The [audit log](/docs/administer/audit-log). |
+| `schema_migrations` | Which migrations have been applied. |
+
+## Requirements
+
+PostgreSQL 17 is what the repository's development setup and its tests use. The database user needs to create tables and indexes in its database (the migrations run as it). The server opens up to 10 connections.
+
+## Migrations
+
+The server applies any migrations it hasn't applied yet **every time it starts**, before it listens, in one transaction, holding a PostgreSQL advisory lock so several servers starting together don't race. The log names what it applied: `[server] database migrated: 1, 2`. The recovery command (`promote`) migrates first too.
+
+| Version | Name |
+|---|---|
+| 1 | people, settings, preferences, audit log |
+| 2 | personal agents |
+
+Migrations are forward-only and ship inside the server; a released one is never edited, only followed by the next. Going back to an older version past a migration means restoring a backup taken before it. See [Upgrades and backups](/docs/operate/upgrades-and-backups).
+
+## For development
+
+The repository's `compose.yaml` runs a development PostgreSQL 17 on `127.0.0.1:55433` (user `pai`, password `pai-local-only`, database `pai`): `pnpm db:up`. It matches `DATABASE_URL` in `.env.example`. Never use that password anywhere else.
