@@ -39,7 +39,7 @@
     "files": [
       "chat-tool-steps"
     ],
-    "alt": "A reply's work block expanded: a timeline of reasoning, the tool step \"get_time · Asia/Tokyo\" opened to show its Input and indented JSON Output with Copy, then more reasoning, and the answer below."
+    "alt": "A reply's work block expanded: a timeline of reasoning, the tool step get_time (Asia/Tokyo, with how long it ran) opened to show its Input and indented JSON Output with Copy, then more reasoning, and the answer below."
   },
   "chat-live-steps": {
     "files": [
@@ -57,7 +57,7 @@
     "files": [
       "inbox-sidebar"
     ],
-    "alt": "The sidebar inbox: New Chat, Search conversations..., agent buttons All, Assistant, HR Helper and Research helper, then Pinned (one row), Working (one row with a timer), Inbox (rows marked Done and Failed at the top, then others with times such as 5m, 3h, 2d), and the closed shelves Snoozed (2), Settled (4) and Archived (3)."
+    "alt": "The sidebar inbox: New Chat, Search conversations..., agent buttons All, Assistant, HR Helper and Research helper, then Pinned (one row), Working (one row with a timer) and Inbox (rows marked Done, Failed, Failed and Woke, then others, with times such as 12m, 25m, 2h and 34m). The shelves Snoozed, Settled and Archived are below the bottom of the window."
   },
   "inbox-row-menu": {
     "files": [
@@ -142,7 +142,7 @@
     "files": [
       "admin-people"
     ],
-    "alt": "Admin → People: the table Person, Role, Status and Last seen, with Morgan Lee (you) and Sam Ortiz as Administrator, one Suspended person, and a row's actions menu open with Make administrator and Suspend…."
+    "alt": "Admin → People: the table Person, Role, Status and Last seen, with Morgan Lee (you), Alex Morgan and Sam Ortiz as Administrators, one Suspended person, and a row's actions menu open with Make administrator and Suspend…."
   },
   "admin-agents": {
     "files": [
@@ -184,6 +184,6 @@
     "files": [
       "admin-audit"
     ],
-    "alt": "Admin → Audit log: entries such as \"Priya Shah signed in for the first time\", \"Morgan Lee became the first administrator (INITIAL_ADMIN_EMAIL)\", \"Morgan Lee made Sam Ortiz an administrator\" and \"Morgan Lee changed the branding\", with dates."
+    "alt": "Admin → Audit log, newest first: entries such as \"Priya Shah signed in for the first time\", \"Morgan Lee changed which features are on\", \"Morgan Lee changed the branding\", \"Morgan Lee made Alex Morgan an administrator\" and \"Morgan Lee made Sam Ortiz an administrator\", then other people's first sign-ins, each with its date."
   }
 }

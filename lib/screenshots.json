@@ -1,1 +1,157 @@
-{}
+{
+  "admin-agents": {
+    "src": "/images/admin-agents.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "admin-audit": {
+    "src": "/images/admin-audit.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "admin-branding": {
+    "src": "/images/admin-branding.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "admin-features": {
+    "src": "/images/admin-features.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "admin-features-locked": {
+    "src": "/images/admin-features-locked.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "admin-overview": {
+    "src": "/images/admin-overview.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "admin-people": {
+    "src": "/images/admin-people.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "admin-provided-agent": {
+    "src": "/images/admin-provided-agent.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "admin-usage": {
+    "src": "/images/admin-usage.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "chat-agent-picker": {
+    "src": "/images/chat-agent-picker.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "chat-agent-picker-teams": {
+    "src": "/images/chat-agent-picker-teams.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "chat-conversation": {
+    "src": "/images/chat-conversation.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "chat-home": {
+    "src": "/images/chat-home.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "chat-live-steps": {
+    "src": "/images/chat-live-steps.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "chat-reply-failed": {
+    "src": "/images/chat-reply-failed.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "chat-tool-steps": {
+    "src": "/images/chat-tool-steps.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "command-palette": {
+    "src": "/images/command-palette.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "connect-gate": {
+    "src": "/images/connect-gate.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "inbox-row-menu": {
+    "src": "/images/inbox-row-menu.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "inbox-sidebar": {
+    "src": "/images/inbox-sidebar.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "inbox-snooze": {
+    "src": "/images/inbox-snooze.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "phone-inbox": {
+    "src": "/images/phone-inbox.webp",
+    "width": 780,
+    "height": 1688
+  },
+  "settings-account": {
+    "src": "/images/settings-account.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "settings-connection": {
+    "src": "/images/settings-connection.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "settings-conversations": {
+    "src": "/images/settings-conversations.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "settings-customization": {
+    "src": "/images/settings-customization.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "settings-my-agents": {
+    "src": "/images/settings-my-agents.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "settings-new-agent": {
+    "src": "/images/settings-new-agent.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "settings-usage": {
+    "src": "/images/settings-usage.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "sign-in": {
+    "src": "/images/sign-in.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "sign-in-dev": {
+    "src": "/images/sign-in-dev.webp",
+    "width": 1440,
+    "height": 900
+  }
+}
