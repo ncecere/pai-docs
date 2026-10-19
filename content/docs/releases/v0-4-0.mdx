@@ -1,0 +1,58 @@
+---
+title: v0.4.0
+description: "Pi Agent Interface v0.4.0 (2026-10-19): safe to share and to run for other people. Access and administrators by identity-provider group, rotating the session secret, Prometheus metrics, a rehearsed restore, and browser and accessibility tests."
+---
+
+**Released 2026-10-19.** Tag [`v0.4.0`](https://github.com/ncecere/pi-agent-interface/tree/v0.4.0) · image `ghcr.io/ncecere/pi-agent-interface:v0.4.0` (`sha256:9c140c7c6442bae5c31bacedaa395d92bcf83cfc41f2c5dcc6cdcd1cca50c399`) · commit `b193eed` · migrations 1 to 3 (none new).
+
+Safe to share, and to run for other people: access by identity-provider group, rotating the session secret, metrics, a rehearsed restore, and browser and accessibility tests. These docs describe this release.
+
+## Upgrading from 0.3.1
+
+Replace the image and restart. There is no new migration and no step to take: every new option is off unless you set it. The one change you will see without doing anything is slightly adjusted colours (see [Accessibility](#accessibility)). See [Upgrades and backups](/docs/operate/upgrades-and-backups#from-v031-to-v040). Upgrading from an older version? Read the [v0.3.1](/docs/releases/v0-3-1), [v0.3.0](/docs/releases/v0-3-0), [v0.2.1](/docs/releases/v0-2-1) and [v0.2.0](/docs/releases/v0-2-0#upgrading-from-010) notes too.
+
+## The image
+
+```text
+ghcr.io/ncecere/pi-agent-interface:v0.4.0
+ghcr.io/ncecere/pi-agent-interface@sha256:9c140c7c6442bae5c31bacedaa395d92bcf83cfc41f2c5dcc6cdcd1cca50c399
+```
+
+It is signed with cosign keyless signing, and the signature was verified. Check it yourself before you deploy, and deploy by digest:
+
+```sh
+cosign verify ghcr.io/ncecere/pi-agent-interface@sha256:9c140c7c6442bae5c31bacedaa395d92bcf83cfc41f2c5dcc6cdcd1cca50c399 \
+  --certificate-identity https://github.com/ncecere/pi-agent-interface/.github/workflows/image.yml@refs/tags/v0.4.0 \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+See [The container image](/docs/operate/container#getting-the-image).
+
+## What's new
+
+- **Sign-in by group.** `OIDC_ALLOWED_GROUPS` limits who can sign in to members of the listed groups of your identity provider, and `OIDC_ADMIN_GROUPS` makes its groups decide who is an administrator, checked on every sign-in. Someone who loses the group is signed out of the sessions they have and can't sign in again. `OIDC_GROUPS_CLAIM` says where the provider lists groups (a name, or a dotted path). With admin groups set, **Admin → People** shows "Set by sign-in group" and doesn't offer role changes; the audit log records the change as made through a group. The last active administrator is never demoted this way. See [Access and administrators by group](/docs/operate/sign-in#access-and-administrators-by-group) and [People and roles](/docs/administer/people-and-roles#roles-set-by-your-identity-provider).
+- **Rotating `SESSION_SECRET`.** Put the old secret in `SESSION_SECRET_PREVIOUS` and the new one in `SESSION_SECRET`: sessions keep working (and are sealed again with the new secret as they are used), and on start the app seals every stored platform connection with the new secret, so nobody signs in or connects again. The log says when the old secret can be dropped. See [Rotating the session secret](/docs/operate/rotating-the-session-secret).
+- **Prometheus metrics** (optional, `METRICS_ENABLED=true`): requests by route and status with latency, calls to the platform by outcome, platform-token refreshes, sign-ins by outcome, open streams, database reachability, and the usual process figures, on a port of their own (`METRICS_PORT`, default 9464) so exposing the app doesn't expose them. `deploy/kubernetes/components/metrics` adds a Service, ServiceMonitor, NetworkPolicy and eight example alerts. See [Metrics](/docs/operate/metrics).
+- **Restore rehearsed and documented.** The product's README now says what the database holds, what a restore needs (keep `SESSION_SECRET`) and does, and how to rehearse one on CloudNativePG. It was rehearsed on the reference deployment on 2026-10-19: the latest state and a point in time, each in about a minute, every table matching, tokens still opening. See [Backing up and restoring](/docs/operate/upgrades-and-backups#backing-up-and-restoring).
+- **Browser tests in CI** (`pnpm e2e`): sign-in, chat with a streamed reply, the inbox (including the status-over-actions layout fixed in 0.3.1, on desktop and touch), administration access and the Connect flow, against a fake platform. They are not part of the shipped image. See [Accessibility](/docs/use/accessibility) and [Before 1.0](/docs/releases#before-10) for how the app is tested.
+
+## Accessibility
+
+Automated checks (axe) now run in CI on the main pages in both themes and every accent. What they found is fixed:
+
+- The **Failed** and **Working** statuses and the muted text on the open conversation's row were too faint to read. The light theme's red and blue are darker, and the dark theme's muted text is a little lighter.
+- The **Default model** selector in Admin → Agents had no name for screen readers.
+- The user-menu button on a phone didn't start its name with the initials it shows.
+- The emerald accent's dark-theme buttons (white on 3.3:1) are now darker.
+
+Keyboard focus and reduced motion are tested too. What isn't checked is listed on the [Accessibility](/docs/use/accessibility) page.
+
+## New settings
+
+All optional, and all off or empty unless set. See [Configuration](/docs/operate/configuration).
+
+| Setting | For |
+|---|---|
+| `OIDC_ALLOWED_GROUPS`, `OIDC_ADMIN_GROUPS`, `OIDC_GROUPS_CLAIM` | [Access and administrators by group](/docs/operate/sign-in#access-and-administrators-by-group). |
+| `SESSION_SECRET_PREVIOUS` | [Rotating the session secret](/docs/operate/rotating-the-session-secret). |
+| `METRICS_ENABLED`, `METRICS_PORT`, `METRICS_HOST` | [Metrics](/docs/operate/metrics). |

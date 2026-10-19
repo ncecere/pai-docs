@@ -95,7 +95,7 @@ The app keeps each person's access and refresh tokens in its database, encrypted
 | "The platform refused to register this app: …" | The platform's reason follows. |
 | "You connected *a* on the agent platform, but you're signed in here as *b*. …" | The [account check](/docs/operate/security#the-account-check-connect-mode). |
 | `[agents] provided agent "…" uses a template that isn't in the platform's catalog; personal workspaces can't deploy it` | A provided agent's template isn't in the platform's catalog. See [Agents](/docs/administer/agents#provided-agents). |
-| Everyone is asked to connect again | `SESSION_SECRET` was changed, so the stored tokens can't be read. |
+| Everyone is asked to connect again | `SESSION_SECRET` was changed without a [rotation](/docs/operate/rotating-the-session-secret), so the stored tokens can't be read. |
 
 The server's log lines start with `[connect]` and `[agents]`.
 

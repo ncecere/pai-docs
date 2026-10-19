@@ -1,0 +1,34 @@
+---
+title: Accessibility
+description: What Pi Agent Interface checks automatically for accessibility, what it doesn't check, and what to do if something doesn't work for you.
+---
+
+Since v0.4.0, Pi Agent Interface's accessibility is checked automatically on every push to its repository, by the same browser tests that cover sign-in, chat and the inbox. This page says what those checks cover, and what nobody has checked yet.
+
+## What is checked automatically
+
+The checks are in the product's browser tests (`e2e/tests/a11y.spec.ts`) and run in CI on every push:
+
+- **Automated accessibility checks (axe, WCAG 2.0 and 2.1 levels A and AA) find nothing** on the sign-in page, the chat (home, a conversation, a row's menu, the command palette, and while an agent works), Settings and every Admin page. They run in the **light and dark themes**, and with **each of the four accents**.
+- **Keyboard focus.** Every stop of the keyboard path shows where focus is, and the first is a **Skip to main content** link. See also the [keyboard shortcuts](/docs/use/keyboard-shortcuts).
+- **Reduced motion.** With reduced motion asked for in your system settings, nothing on the page keeps animating.
+- **Screen reader announcements.** A reply starting and finishing is announced to screen readers (a polite live region).
+
+## What isn't checked
+
+- **A screen reader, by hand.** Nobody tests with VoiceOver or NVDA as part of a release.
+- **Text scaled to 200 %.**
+- **High-contrast mode.**
+
+Axe finds only a part of the problems, so passing it is not the same as being easy to use. If something fails for you, [open an issue](https://github.com/ncecere/pi-agent-interface/issues) on the product's repository and say what you used (your browser, and your screen reader or settings).
+
+## What the first audit fixed
+
+The first run of these checks, for v0.4.0, found and fixed the following:
+
+- The **Failed** and **Working** statuses and the muted text on the open conversation's row were too faint to read. The light theme's red and blue are darker, and the dark theme's muted text is a little lighter.
+- The **Default model** selector in Admin → Agents had no name for screen readers.
+- The user-menu button on a phone didn't start its name with the initials it shows.
+- The emerald accent's dark-theme buttons (white on 3.3:1) are now darker.
+
+If you chose a theme or accent in [Settings](/docs/use/settings), you may see slightly adjusted colours since v0.4.0.

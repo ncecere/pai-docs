@@ -14,13 +14,25 @@ description: Everyone who has signed in to Pi Agent Interface, their roles, and 
 | **Member** | Use the app: their own agents, conversations and Settings. |
 | **Administrator** | Everything a member can, and the [admin dashboard](/docs/administer). |
 
-Roles belong to Pi Agent Interface, not to your identity provider or the agent platform: being an administrator here gives no rights on the platform, and the identity provider's groups aren't read.
+Roles belong to Pi Agent Interface, not to the agent platform: being an administrator here gives no rights on the platform. Unless your operator has set `OIDC_ADMIN_GROUPS`, they are also not your identity provider's: its groups aren't read, and you change roles here (below). With admin groups set, the provider decides (next section).
+
+## Roles set by your identity provider
+
+When your operator has set [`OIDC_ADMIN_GROUPS`](/docs/operate/sign-in#access-and-administrators-by-group), the identity provider decides who is an administrator, and it is checked each time someone signs in: members of an admin group become administrators and everyone else a member. Then:
+
+- Under **Role**, each person shows **Set by sign-in group**.
+- The **…** menu doesn't offer **Make administrator** or **Make member**, and the server refuses a role change with a `409` ("Administrators are set by the sign-in provider (OIDC_ADMIN_GROUPS). Change the group there."). Add or remove the person in the group at your identity provider; it takes effect when they next sign in.
+- The audit log records a change made this way as "*Sam Ortiz* became an administrator through a sign-in group" or "*Sam Ortiz* stopped being an administrator: left the sign-in group".
+- The last active administrator is never demoted this way.
+- **Suspend** and **Restore** work as before.
+
+If `OIDC_ALLOWED_GROUPS` is set, someone outside its groups (and the admin groups) can't sign in at all, and is shown "Your account isn't allowed to use this app. Ask an administrator to add you to its group." The people list only has those who have signed in.
 
 ## Changing someone
 
 The **…** button on a row (**Actions for *name***) offers:
 
-- **Make administrator** or **Make member**.
+- **Make administrator** or **Make member** (not when [roles are set by sign-in group](#roles-set-by-your-identity-provider)).
 - **Suspend…**, after asking: "They're signed out everywhere at once and can't sign in again until restored. Their agents and conversations are kept." Suspended people see "Your account is suspended. Ask an administrator to restore it." when they try to sign in.
 - **Restore**, for someone suspended.
 

@@ -17,7 +17,7 @@ When a person connects, the platform gives the app an access token and a refresh
 - **One person's token, that person's agents.** There is no shared key. A token reaches what its person may use on the platform, and the platform enforces it. The app still refuses to rename or delete anything outside the person's own personal workspace, and provided copies can't be deleted from the app.
 - **Renewed one at a time.** Access tokens are renewed shortly before they run out; the refresh token changes on every use, so a database lock lets only one renewal for a person run at a time, across replicas. A renewal the platform refuses ends the connection and the person is asked to connect again.
 - **Revoked when it should be.** **Disconnect** and a refused account ask the platform to revoke the refresh token (best effort), then forget the tokens.
-- **Changing `SESSION_SECRET`** makes the stored tokens unreadable. The app forgets them, and everyone connects again.
+- **Changing `SESSION_SECRET`** makes the stored tokens unreadable. The app forgets them, and everyone connects again. To replace the secret without that, [rotate it](/docs/operate/rotating-the-session-secret): the previous secret stays in `SESSION_SECRET_PREVIOUS` for a while, and the app seals the stored tokens again with the new one.
 - **The flow itself** is the authorization code flow with PKCE (S256) and a `state`, held between the redirect and the callback in a sealed, HttpOnly cookie (`__Host-pai_connect` on https) that lasts 10 minutes and is tied to the signed-in person. After connecting, people return only to a path on the app itself. An answer that names an issuer other than the platform's is refused.
 - **Redirects aren't followed** in any call to the platform.
 - **The metadata document is public by design.** `<APP_URL>/oauth/client-metadata.json` holds only the app's name, address, logo and callback address, and is the one thing the platform must reach without signing in.
@@ -43,7 +43,7 @@ In Connect mode the platform decides what a person may see and use, with their o
 - **An encrypted cookie, no session store.** The session (the person's ID, name and email, a CSRF token, its expiry and the person's session version) is sealed with AES-256-GCM, under a key derived from `SESSION_SECRET` with HKDF-SHA256. It can't be read or forged without the secret, and its expiry is checked on every request.
 - **The cookie** is `__Host-pai_session` on https (`pai_session` on a loopback http address): `HttpOnly`, `Secure` on https, `SameSite=Lax`, path `/`, and it lasts `SESSION_TTL_HOURS` (default 7 days). It isn't extended by use.
 - **Ending sessions.** Each person has a session version. **Sign out everywhere** and a suspension raise it, which ends every session they have. The server re-reads each person's record at most every 10 seconds, so a change of role, a suspension or sign-out everywhere reaches open sessions within about ten seconds.
-- **Changing `SESSION_SECRET`** signs everyone out.
+- **Changing `SESSION_SECRET`** signs everyone out, unless you [rotate it](/docs/operate/rotating-the-session-secret) with `SESSION_SECRET_PREVIOUS`.
 - **Single sign-on** uses the authorization code flow with PKCE (S256), `state` and `nonce`, carried between the redirect and the callback in a second sealed cookie that lasts 10 minutes. After signing in, people return only to a path on the app itself, never another site.
 
 ## Writes: CSRF and origin
@@ -86,6 +86,6 @@ Links in replies that lead to another site open through a warning that names the
 
 ## Known limitations
 
-- Access is all or nothing: anyone the identity provider lets sign in can use the app. There is no access control by identity-provider group; restrict access in the provider.
+- Access is all or nothing unless you set groups: anyone the identity provider lets sign in can use the app, as a member. Since v0.4.0 you can limit access, and choose administrators, by the provider's groups (see [Sign-in](/docs/operate/sign-in#access-and-administrators-by-group)). Groups are read when someone signs in, not during a session.
 - Single sign-on is tested against an in-process provider, not against a particular product.
 - The app has no rate limits of its own beyond the stream limits above.

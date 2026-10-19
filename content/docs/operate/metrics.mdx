@@ -1,0 +1,65 @@
+---
+title: Metrics
+description: Pi Agent Interface's optional Prometheus metrics, which are served on a port of their own, what each one counts, and the Kubernetes component with its alerts.
+---
+
+Since v0.4.0 Pi Agent Interface can serve [Prometheus](https://prometheus.io) metrics. They are **off unless you set `METRICS_ENABLED=true`**, and nothing is sent anywhere: the app only answers when something scrapes it.
+
+## Turning them on
+
+| Setting | Default | Does |
+|---|---|---|
+| `METRICS_ENABLED` | off | Exactly `true` serves the metrics. |
+| `METRICS_PORT` | `9464` | The port. It must be a port number and differ from `PORT`, or the server doesn't start. |
+| `METRICS_HOST` | `0.0.0.0` | The address to listen on. |
+
+See [Configuration](/docs/operate/configuration#metrics). With them on, the log says `[server] metrics on http://0.0.0.0:9464/metrics` (with your host and port).
+
+## A port of their own
+
+The metrics are not on the app's own port (`PORT`, 8080 in the container). A second, separate listener answers `GET /metrics` in the Prometheus text format, and returns 404 for anything else. So an ingress, reverse proxy or Service that exposes the app does **not** expose its metrics.
+
+The metrics port has no sign-in. Do not publish it outside your cluster or monitoring network. In a container, publish it only where Prometheus can reach it, for example `-p 127.0.0.1:9464:9464`, or leave it unpublished and scrape it over a private network.
+
+```sh
+curl -s http://127.0.0.1:9464/metrics | head
+```
+
+Each pod answers for itself, so scrape every pod and sum across them.
+
+## What is counted
+
+Labels are route patterns and outcomes, never a person, an ID or a path.
+
+| Metric | What |
+|---|---|
+| `pai_http_requests_total{method,route,status}`, `pai_http_request_duration_seconds{method,route}` | Requests, and how long until the response begins (a stream goes on after that). A request that matches no route is counted under `other`. |
+| `pai_platform_requests_total{outcome}` | Calls to the agent platform: `ok`, `client_error`, `server_error`, `network_error`, `not_connected`. |
+| `pai_connect_token_refreshes_total{outcome}` | Refreshes of people's platform tokens: `ok`, `ended` (the platform ended the connection), `error`. |
+| `pai_sign_ins_total{outcome}` | Sign-ins: `ok`, `suspended`, `not_allowed` (refused by [the group settings](/docs/operate/sign-in#access-and-administrators-by-group)), `failed`, `expired`. |
+| `pai_open_streams{kind}` | Conversation streams and live-event streams open now (`kind` is `conversation` or `events`). |
+| `pai_database_up` | 1 when the database answered at the scrape, else 0. |
+| `pai_build_info{version}`, `process_*`, `nodejs_*` | The version, and process figures: start time, CPU, memory, heap and event-loop lag (`nodejs_eventloop_lag_p99_seconds`). |
+
+## On Kubernetes
+
+The base serves no metrics. Add the `components/metrics` component to your overlay to turn them on, with a Service of its own, a ServiceMonitor, a NetworkPolicy for Prometheus and the alerts below. It needs the Prometheus Operator's CRDs. See [Kubernetes](/docs/operate/kubernetes#optional-metrics) for what it adds and how to point its NetworkPolicy at your Prometheus's namespace. Without the Operator, use only its Deployment patch and Service, and point your own scrape configuration at the Service's `metrics` port.
+
+## Alerts
+
+The component's PrometheusRule has eight starting alerts. The thresholds are guesses for a small deployment: tune them to yours. Each alert's description says what to look at.
+
+| Alert | Severity | Fires when |
+|---|---|---|
+| `PiAgentInterfaceDown` | critical | No pod has answered a scrape for 5 minutes (`absent(pai_build_info)`). |
+| `PiAgentInterfaceDatabaseDown` | critical | A pod's database check has failed for 2 minutes: nobody can sign in or chat. |
+| `PiAgentInterfaceServerErrors` | warning | More than 5 % of requests end in a server error (5xx), for 10 minutes. |
+| `PiAgentInterfacePlatformErrors` | warning | More than 20 % of calls to the platform end in a server or network error, for 10 minutes. |
+| `PiAgentInterfaceConnectionsEnding` | warning | More than 10 platform connections ended in the last hour. The platform ended them (revoked, or the app was removed from Trusted apps, or its client was forgotten), and people must connect again. |
+| `PiAgentInterfaceSignInFailures` | warning | More than 10 failed sign-ins in 15 minutes. The identity provider is refusing or misbehaving: look for `[auth] sign-in failed` in the logs. |
+| `PiAgentInterfaceSlow` | warning | The slowest 5 % of requests take over 5 seconds to begin answering, for 10 minutes. |
+| `PiAgentInterfaceEventLoopLag` | warning | A pod's event loop is falling behind (99th percentile over 0.5 seconds, for 10 minutes). CPU is the likely limit: raise the pod's CPU request, or add replicas. |
+
+The product's changelog says the rules were checked with `promtool`.
+
+After a database restore, `pai_connect_token_refreshes_total{outcome="ended"}` may rise as people whose tokens were refreshed after the recovery point connect again. See [Backing up and restoring](/docs/operate/upgrades-and-backups#backing-up-and-restoring).

@@ -17,7 +17,7 @@ const sections = [
     href: '/docs/use',
     icon: <MessagesSquare />,
     description:
-      'Chatting with an agent, tool steps and reasoning, the inbox, keyboard shortcuts, your own agents, connecting your platform account and your settings.',
+      'Chatting with an agent, tool steps and reasoning, the inbox, keyboard shortcuts, accessibility, your own agents, connecting your platform account and your settings.',
   },
   {
     title: 'Administer',
@@ -31,13 +31,13 @@ const sections = [
     href: '/docs/operate',
     icon: <Server />,
     description:
-      'The agent platform it needs (Connect or a service account), every setting, sign-in, Postgres and migrations, the signed container image, the Kubernetes base, security, upgrades and backups.',
+      'The agent platform it needs (Connect or a service account), every setting, sign-in and access by group, Postgres and migrations, the signed container image, the Kubernetes base, security, rotating the session secret, metrics, upgrades, backups and restores.',
   },
   {
     title: 'Releases',
     href: '/docs/releases',
     icon: <Tag />,
-    description: `What changed in each release: ${productVersion} is the latest: two inbox fixes, so a row's status and pin stay clear of its buttons and menu. Before it: when, which model and how many tokens with each message, how long a tool step ran, and an app that waits for its database.`,
+    description: `What changed in each release: ${productVersion} is the latest: access and administrators by identity-provider group, rotating the session secret, Prometheus metrics, a rehearsed restore, and browser and accessibility tests. Before it: two inbox fixes, and when, which model and how many tokens with each message.`,
   },
 ];
 

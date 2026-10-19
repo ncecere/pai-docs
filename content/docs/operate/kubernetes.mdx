@@ -3,7 +3,7 @@ title: Kubernetes
 description: The Kustomize base in Pi Agent Interface's repository — a two-replica Deployment, probes, a PodDisruptionBudget, default-deny NetworkPolicies and the secret it expects — and what your overlay adds.
 ---
 
-The product's repository has a generic [Kustomize](https://kustomize.io) base, `deploy/kubernetes/base`, and a README for it (`deploy/kubernetes/README.md`). This page describes the base as it is at v0.3.1. There is no Helm chart.
+The product's repository has a generic [Kustomize](https://kustomize.io) base, `deploy/kubernetes/base`, and a README for it (`deploy/kubernetes/README.md`). This page describes the base as it is at v0.4.0. There is no Helm chart.
 
 The base holds **no secret values, no namespace and no ingress**. Your own overlay supplies those.
 
@@ -20,12 +20,21 @@ The base holds **no secret values, no namespace and no ingress**. Your own overl
       <File name="serviceaccount.yaml" />
       <File name="networkpolicies.yaml" />
     </Folder>
+    <Folder name="components">
+      <Folder name="metrics">
+        <File name="kustomization.yaml" />
+        <File name="service.yaml" />
+        <File name="servicemonitor.yaml" />
+        <File name="networkpolicy.yaml" />
+        <File name="prometheusrule.yaml" />
+      </Folder>
+    </Folder>
   </Folder>
 </Files>
 
 | File | Makes |
 |---|---|
-| `kustomization.yaml` | Lists the resources, generates the ConfigMap, and sets the image to `ghcr.io/ncecere/pi-agent-interface` at tag `v0.3.1`. |
+| `kustomization.yaml` | Lists the resources, generates the ConfigMap, and sets the image to `ghcr.io/ncecere/pi-agent-interface` at tag `v0.4.0`. |
 | `config.env` | The settings in the ConfigMap `pi-agent-interface-config` (below). The name gets a hash of the content, and the Deployment's reference follows, so a change to the settings rolls the pods. |
 | `deployment.yaml` | The Deployment `pi-agent-interface` and its PodDisruptionBudget. |
 | `service.yaml` | A ClusterIP Service `pi-agent-interface` on port 80, to the container's port 8080, with no session affinity: conversations stream through the app, which any replica serves. |
@@ -71,6 +80,7 @@ The ConfigMap comes from `config.env`. It holds placeholders that your overlay r
 | `OIDC_ISSUER`, `OIDC_CLIENT_ID` | placeholders | Your identity provider's issuer and client ID. |
 | `DEV_AUTH` | `false` | Leave it. The server refuses it on a non-loopback `APP_URL` anyway. |
 | `INITIAL_ADMIN_EMAIL`, `DISABLED_FEATURES`, `CONNECT_EMAIL_MATCH` | commented out | Optional. See [Configuration](/docs/operate/configuration). |
+| `OIDC_ALLOWED_GROUPS`, `OIDC_ADMIN_GROUPS`, `OIDC_GROUPS_CLAIM` | not in the base | Optional: access and administrators by your identity provider's groups. Merge them into the ConfigMap like the settings below. See [Sign-in](/docs/operate/sign-in#access-and-administrators-by-group). |
 
 <Callout type="warn" title="Upgrading a service-account deployment">
   The base sets `PLATFORM_AUTH=connect`. A deployment that has been using a service key must set `PLATFORM_AUTH=service` in its overlay, with `PLATFORM_TEAM` and the key, or it switches to Connect.
@@ -81,7 +91,7 @@ The Deployment reads secret values from a Secret named **`pi-agent-interface-run
 | Key | Needed | Holds |
 |---|---|---|
 | `DATABASE_URL` | Always | The app's own PostgreSQL. |
-| `SESSION_SECRET` | Always | 32 or more characters (`openssl rand -base64 48`). It encrypts sessions and the platform tokens the app keeps, so changing it signs everyone out and asks everyone to connect again. |
+| `SESSION_SECRET` | Always | 32 or more characters (`openssl rand -base64 48`). It encrypts sessions and the platform tokens the app keeps, so changing it alone signs everyone out and asks everyone to connect again. To replace it without that, [rotate it](/docs/operate/rotating-the-session-secret); the base doesn't pass `SESSION_SECRET_PREVIOUS` on, so that page shows the patch your overlay needs. |
 | `OIDC_CLIENT_SECRET` | Always | The identity provider client's secret. |
 | `PLATFORM_SERVICE_KEY` | Service mode only | The team service account's key. The reference is optional, so Connect mode needs no such key. |
 
@@ -108,14 +118,14 @@ This is how the app reaches the agent platform and the identity provider: over h
 
 ### A namespace and an image pin
 
-The base uses the release tag. Pin the digest from the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.3.1), after verifying its signature (see [The container image](/docs/operate/container#getting-the-image)). The digest takes precedence over the tag. Never use `latest`.
+The base uses the release tag. Pin the digest from the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.4.0), after verifying its signature (see [The container image](/docs/operate/container#getting-the-image)). The digest takes precedence over the tag. Never use `latest`.
 
 ```yaml
 namespace: pi-agent-interface
 images:
   - name: ghcr.io/ncecere/pi-agent-interface
-    newTag: v0.3.1
-    digest: sha256:d2c1fa505e40c396aebe44806f0b3316e5da379b44b40dfead16a7638225e91c
+    newTag: v0.4.0
+    digest: sha256:9c140c7c6442bae5c31bacedaa395d92bcf83cfc41f2c5dcc6cdcd1cca50c399
 ```
 
 </Step>
@@ -178,6 +188,26 @@ metadata:
 In Connect mode the platform fetches `<APP_URL>/oauth/client-metadata.json` from the app's public address when someone connects. That address must be reachable from the platform and must answer without sign-in and without redirecting, so keep any authentication in front of the ingress away from that path. See [The agent platform](/docs/operate/platform#the-client-id-metadata-document).
 
 Keep `APP_URL` equal to the ingress's public https address. See [Behind a reverse proxy](/docs/operate/container#behind-a-reverse-proxy).
+
+## Optional: metrics
+
+The base serves no metrics. `deploy/kubernetes/components/metrics` is a Kustomize component that turns them on. It needs the Prometheus Operator's CRDs (`ServiceMonitor` and `PrometheusRule`). Add it to your overlay:
+
+```yaml
+components:
+  - ../../components/metrics   # path from your overlay to deploy/kubernetes/components/metrics
+```
+
+It patches the Deployment to set `METRICS_ENABLED` and `METRICS_PORT` (9464) and to declare a `metrics` container port, and adds:
+
+| Resource | Is |
+|---|---|
+| Service `pi-agent-interface-metrics` | ClusterIP, port 9464 to the pod's `metrics` port, so the app's public Service and its ingress never carry it. |
+| ServiceMonitor `pi-agent-interface` | Scrapes `/metrics` on that Service every 30 seconds. |
+| NetworkPolicy `pi-agent-interface-metrics` | Lets a namespace called `monitoring` reach TCP 9464. Patch the namespace to where your Prometheus runs. |
+| PrometheusRule `pi-agent-interface` | Eight starting alerts, to tune. |
+
+The metrics and the alerts are listed on the [Metrics](/docs/operate/metrics) page.
 
 ## More than one replica
 

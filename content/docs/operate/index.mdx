@@ -28,7 +28,7 @@ Pi Durable platform ──https──▶ <APP_URL>/oauth/client-metadata.json   
 <Cards>
   <Card title="The agent platform" href="/docs/operate/platform">Connect and service mode, what the platform must offer, the app's metadata document and what the app calls.</Card>
   <Card title="Configuration" href="/docs/operate/configuration">Every environment variable and how it is checked.</Card>
-  <Card title="Sign-in" href="/docs/operate/sign-in">Setting up the OpenID Connect client.</Card>
+  <Card title="Sign-in" href="/docs/operate/sign-in">Setting up the OpenID Connect client, and limiting access and choosing administrators by group.</Card>
   <Card title="The container image" href="/docs/operate/container">The published, signed image, running it as a non-root user, and the reverse proxy.</Card>
   <Card title="Kubernetes" href="/docs/operate/kubernetes">The product's Kustomize base: Deployment, probes, NetworkPolicies, and what your overlay adds.</Card>
 </Cards>
@@ -38,5 +38,7 @@ Pi Durable platform ──https──▶ <APP_URL>/oauth/client-metadata.json   
 <Cards>
   <Card title="PostgreSQL and migrations" href="/docs/operate/database">What the app stores and how its schema is migrated.</Card>
   <Card title="Security" href="/docs/operate/security">Platform tokens, sessions, CSRF and origin checks, ownership checks and limits.</Card>
-  <Card title="Upgrades and backups" href="/docs/operate/upgrades-and-backups">Moving to a new version, and what to back up.</Card>
+  <Card title="Rotating the session secret" href="/docs/operate/rotating-the-session-secret">Replacing SESSION_SECRET without signing anyone out.</Card>
+  <Card title="Metrics" href="/docs/operate/metrics">Optional Prometheus metrics on a port of their own, and the Kubernetes component with its alerts.</Card>
+  <Card title="Upgrades and backups" href="/docs/operate/upgrades-and-backups">Moving to a new version, what to back up, and how to restore.</Card>
 </Cards>

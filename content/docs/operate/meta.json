@@ -13,6 +13,8 @@
     "---Run---",
     "database",
     "security",
+    "rotating-the-session-secret",
+    "metrics",
     "upgrades-and-backups"
   ]
 }

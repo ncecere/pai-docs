@@ -54,7 +54,10 @@ At least one way to sign in is required: OIDC, or `DEV_AUTH` on a loopback `APP_
 | `OIDC_ISSUER` | none | Your identity provider's issuer URL. Must be a URL, and https unless it is loopback ("OIDC_ISSUER must use https"). Discovery happens at the first sign-in, so a wrong issuer shows up then, in the log. |
 | `OIDC_CLIENT_ID` | none | The client's ID. |
 | `OIDC_CLIENT_SECRET` (secret) | none | The client's secret. The three `OIDC_*` above go together: any one set without the others stops the server ("OIDC_ISSUER, OIDC_CLIENT_ID and OIDC_CLIENT_SECRET go together"). |
-| `OIDC_SCOPES` | `openid profile email` | The scopes asked for, separated by spaces. Used only with OIDC. |
+| `OIDC_SCOPES` | `openid profile email` | The scopes asked for, separated by spaces. Used only with OIDC. Add one if your provider needs a scope to release the groups claim. |
+| `OIDC_ALLOWED_GROUPS` | empty | Comma-separated group names. When set, only members of one of these (or of an admin group) can sign in. Everyone else sees "Your account isn't allowed to use this app. Ask an administrator to add you to its group." and, if they had signed in before, their sessions end. Empty: anyone your provider signs in. Needs OIDC ("OIDC_ALLOWED_GROUPS and OIDC_ADMIN_GROUPS need single sign-on (OIDC_*)"). |
+| `OIDC_ADMIN_GROUPS` | empty | Comma-separated group names. When set, the provider decides who is an administrator, on every sign-in: members become administrators, others members, and Admin → People can't change roles. The last active administrator is never demoted this way. Empty: administrators are set in the app. Needs OIDC. |
+| `OIDC_GROUPS_CLAIM` | `groups` | Where the provider lists a person's groups: the claim's name, or a dotted path for a nested one (`realm_access.roles`). Looked for in the ID token, then at the userinfo endpoint. Names are matched exactly. Only read when one of the two group lists is set. |
 | `DEV_AUTH` | `false` | Exactly `true` turns on the development accounts Tim, Bob and Sally (`tim@example.test` and so on), with no password. Refused unless `APP_URL` is loopback ("DEV_AUTH requires a loopback APP_URL"). Any other value is off. |
 | `DEV_ACCOUNTS` | the three accounts above | Development only. With `DEV_AUTH=true`, a JSON array of `{"id","name","email"}` that replaces Tim, Bob and Sally, for example `[{"id":"priya","name":"Priya Shah","email":"priya.shah@example.com"}]`. Each `id` is unique, 1 to 64 letters, digits, dots, dashes or underscores; `name` and `email` are required, and there must be at least one account. An invalid value stops the server and names the problem. Ignored while `DEV_AUTH` is off. |
 
@@ -62,7 +65,8 @@ At least one way to sign in is required: OIDC, or `DEV_AUTH` on a loopback `APP_
 
 | Variable | Default | Checked |
 |---|---|---|
-| `SESSION_SECRET` (secret) | none (required) | At least 32 characters ("SESSION_SECRET must be at least 32 characters"); generate one with `openssl rand -base64 48`. Encrypts session cookies and, in Connect mode, the platform tokens the app keeps for people. Changing it signs everyone out, and in Connect mode everyone has to connect again, since the stored tokens can't be read any more. |
+| `SESSION_SECRET` (secret) | none (required) | At least 32 characters ("SESSION_SECRET must be at least 32 characters"); generate one with `openssl rand -base64 48`. Encrypts session cookies and, in Connect mode, the platform tokens the app keeps for people. Changing it alone signs everyone out, and in Connect mode everyone has to connect again, since the stored tokens can't be read any more; to replace it without that, [rotate it](/docs/operate/rotating-the-session-secret). |
+| `SESSION_SECRET_PREVIOUS` (secret) | empty | Secrets this deployment used before, comma-separated, still accepted for opening sessions and stored platform tokens during a [rotation](/docs/operate/rotating-the-session-secret). New values are always sealed with `SESSION_SECRET`. Every one must be at least 32 characters ("SESSION_SECRET_PREVIOUS: every secret must be at least 32 characters"); a value equal to `SESSION_SECRET` is ignored. Empty normally. |
 | `SESSION_TTL_HOURS` | `168` (7 days) | How long a session lasts, in hours. A value that isn't a positive number is silently replaced by 168. A session isn't extended by use: people sign in again when it ends. |
 
 ## Database and administration
@@ -72,6 +76,16 @@ At least one way to sign in is required: OIDC, or `DEV_AUTH` on a loopback `APP_
 | `DATABASE_URL` (secret) | none (required) | The app's own PostgreSQL, for example `postgres://pai:…@db.example.com:5432/pai`. Required; a wrong one fails when the server connects, before it listens. Migrated on start. See [PostgreSQL and migrations](/docs/operate/database). |
 | `INITIAL_ADMIN_EMAIL` | none | Becomes an administrator on signing in, while there is no active administrator. See [The first administrator](/docs/administer/first-administrator). |
 | `DISABLED_FEATURES` | empty | Optional features to turn off for good, comma-separated: `usage`, `myUsage` (case-sensitive). An unknown name stops the server (`DISABLED_FEATURES: there is no feature "…" (known: usage, myUsage)`). In Connect mode `usage` is off whatever this says. See [Features](/docs/administer/features). |
+
+## Metrics
+
+Off unless `METRICS_ENABLED` is `true`. See [Metrics](/docs/operate/metrics).
+
+| Variable | Default | Checked |
+|---|---|---|
+| `METRICS_ENABLED` | `false` | Exactly `true` serves Prometheus metrics on a port of their own. Any other value is off. |
+| `METRICS_PORT` | `9464` | The port the metrics listen on. Must be a port number ("METRICS_PORT is a port number") and different from `PORT` ("METRICS_PORT must differ from PORT"). Only checked while metrics are on. |
+| `METRICS_HOST` | `0.0.0.0` | The address the metrics listen on. Never publish this port outside your cluster or monitoring network. |
 
 ## Set by the image
 
@@ -92,6 +106,8 @@ OIDC_CLIENT_ID=pi-agent-interface
 OIDC_CLIENT_SECRET=...
 INITIAL_ADMIN_EMAIL=morgan.lee@example.com
 ```
+
+To limit sign-in and choose administrators by the provider's groups, add `OIDC_ALLOWED_GROUPS=chat-users` and `OIDC_ADMIN_GROUPS=chat-admins` (see [Sign-in](/docs/operate/sign-in#access-and-administrators-by-group)).
 
 For a platform without Connect, with a team service account:
 

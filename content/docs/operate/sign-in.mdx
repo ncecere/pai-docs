@@ -1,6 +1,6 @@
 ---
 title: Sign-in
-description: Setting up single sign-on for Pi Agent Interface with an OpenID Connect provider, and what the development accounts are for.
+description: Setting up single sign-on for Pi Agent Interface with an OpenID Connect provider, limiting access and choosing administrators by the provider's groups, and what the development accounts are for.
 ---
 
 People sign in to Pi Agent Interface with your identity provider over **OpenID Connect**, and never to the agent platform. (In Connect mode they then [connect their own platform account](/docs/use/connect-your-platform-account) once; that is a separate step, after sign-in.) Use any provider that offers OpenID Connect discovery and confidential clients, such as authentik, Keycloak or Microsoft Entra ID (see [Tested with](#tested-with)).
@@ -52,7 +52,47 @@ The sign-in page shows **Sign in with single sign-on**. The app finds the provid
 | `email` | Their email: shown in the app, matched by `INITIAL_ADMIN_EMAIL` and `admin:promote`. |
 | `name`, else `preferred_username`, else `email` | Their name. |
 
-Name and email are updated at every sign-in. Anyone your provider lets sign in to the client can use the app, as a **Member**: restrict who may use it in the provider (an assignment or a group policy on the client). The app doesn't read groups.
+Name and email are updated at every sign-in. By default anyone your provider lets sign in to the client can use the app, as a **Member**: restrict who may use it in the provider (an assignment or a group policy on the client), or have the app do it by group (next section). Without the group settings the app doesn't read groups.
+
+## Access and administrators by group
+
+These settings make your identity provider's groups decide who may use Pi Agent Interface and who administers it. They are empty by default, and then groups play no part.
+
+| Setting | Does |
+|---|---|
+| `OIDC_ALLOWED_GROUPS` | Comma-separated group names. Only members of one of them (or of an admin group) can sign in. |
+| `OIDC_ADMIN_GROUPS` | Comma-separated group names. Members become administrators and everyone else a member, on every sign-in. |
+| `OIDC_GROUPS_CLAIM` | Where the provider lists a person's groups: a claim's name (default `groups`), or a dotted path for a nested one, such as `realm_access.roles`. |
+
+They need single sign-on: the server doesn't start with either group list and no `OIDC_*` client ("OIDC_ALLOWED_GROUPS and OIDC_ADMIN_GROUPS need single sign-on (OIDC_*)").
+
+### How it works
+
+- **Names match exactly**, character for character, including case. Surrounding spaces in the list and in the provider's names are ignored.
+- **The claim can be an array or a single string.** A single string counts as a list of one group. Entries that aren't strings are ignored.
+- **A dotted path** is followed through nested objects when no claim has that exact name.
+- **ID token first, then userinfo.** The app looks in the ID token. If the claim isn't there, it asks the provider's userinfo endpoint. The provider must release the claim: add the scope that carries it to `OIDC_SCOPES` if your provider needs one. When neither has it, the person is treated as being in no group, and the log says `[auth] … no "groups" claim; the provider must release it (check OIDC_SCOPES and OIDC_GROUPS_CLAIM)`. Check that line after you set the groups: with `OIDC_ADMIN_GROUPS` set and no claim released, everyone counts as being in no group, and each administrator but the last is made a member at their next sign-in.
+- **Allowed groups.** With `OIDC_ALLOWED_GROUPS` set, a person who is in none of its groups and none of the admin groups is refused. They see "Your account isn't allowed to use this app. Ask an administrator to add you to its group." With only `OIDC_ADMIN_GROUPS` set, nobody is refused: everyone who is in no admin group is a member.
+- **Losing the group.** The groups are read when someone signs in. If a person who has signed in before is refused, the sessions they have end, and they can't sign in again until they are back in a group. A person who stays signed in isn't re-checked until their session ends (`SESSION_TTL_HOURS`, 7 days by default) or they sign in again, so for a quicker cut-off, suspend them in [People](/docs/administer/people-and-roles).
+- **Administrators by group are authoritative.** With `OIDC_ADMIN_GROUPS` set, each sign-in sets the person's role from their groups: administrator in an admin group, member otherwise. Roles come from the groups, not from the app, so [Admin → People](/docs/administer/people-and-roles#roles-set-by-your-identity-provider) shows "Set by sign-in group" and doesn't offer role changes (the server refuses them with a `409`).
+- **The last active administrator is never demoted this way**, so a mistake in the groups can't lock everyone out. To get back in, use `INITIAL_ADMIN_EMAIL` or the [recovery command](/docs/administer/first-administrator#locked-out-adminpromote).
+- **The audit log records it** as a change made through a group: "*Sam Ortiz* became an administrator through a sign-in group" or "*Sam Ortiz* stopped being an administrator: left the sign-in group".
+
+### With authentik
+
+authentik's default `profile` scope mapping already releases a `groups` claim, and the names in it are the names of your authentik groups. So with the scopes the app asks for by default (`openid profile email`) there is nothing to add to `OIDC_SCOPES` and nothing to set in `OIDC_GROUPS_CLAIM`.
+
+1. In authentik, create the groups you want, for example `chat-users` and `chat-admins`, and add people to them.
+2. Set the group names in the app's configuration:
+
+   ```sh
+   OIDC_ALLOWED_GROUPS=chat-users
+   OIDC_ADMIN_GROUPS=chat-admins
+   ```
+
+3. Restart. Members of `chat-users` can sign in as members, and members of `chat-admins` (who need not also be in `chat-users`) can sign in as administrators.
+
+With another provider, find out which claim carries the groups and set `OIDC_GROUPS_CLAIM` to it, and add the scope that releases it to `OIDC_SCOPES`.
 
 ## Sign-in errors
 
@@ -61,7 +101,8 @@ Name and email are updated at every sign-in. Anyone your provider lets sign in t
 | "Signing in took too long. Try again." | The round trip to the provider took more than 10 minutes. |
 | "Single sign-on didn't complete. Try again, or ask an administrator." | The provider returned an error, the code exchange or the ID token check failed, or discovery failed. See the server's log. |
 | "Your account is suspended. Ask an administrator to restore it." | An administrator [suspended](/docs/administer/people-and-roles) the person. |
-| "Your session ended. Sign in again to continue." | The session expired, the person signed out everywhere, or `SESSION_SECRET` changed. |
+| "Your account isn't allowed to use this app. Ask an administrator to add you to its group." | `OIDC_ALLOWED_GROUPS` is set and the person is in none of its groups or the admin groups. See [Access and administrators by group](#access-and-administrators-by-group). |
+| "Your session ended. Sign in again to continue." | The session expired, the person signed out everywhere, the person was refused at a later sign-in because they left the allowed groups, or `SESSION_SECRET` changed without a [rotation](/docs/operate/rotating-the-session-secret). |
 
 After signing in, people return to the page that sent them to sign in.
 
