@@ -11,7 +11,7 @@ Pi Agent Interface is a front end for a [Pi Durable platform](https://github.com
 | **Where agents live** | In each person's **personal workspace**, beside their teams' agents | In one team, one agent per person (`u:<person>`) |
 | **What the platform must offer** | Connect (`connect` in `GET /v1/auth/config`) and personal workspaces | A team, an editor service account and a published model |
 | **Who decides what a person may use** | The platform | The app, with an ownership check on every request |
-| **Admin → Usage** | Locked off ([why](/docs/administer/features#connect-mode)) | Works |
+| **Admin → Usage** | The team report is locked off ([why](/docs/administer/features#connect-mode)); **Usage of connected people** reads each person's own instead ([how](/docs/administer/usage#in-connect-mode)) | Works |
 | **Default** | When `PLATFORM_SERVICE_KEY` is not set | When `PLATFORM_SERVICE_KEY` is set |
 
 `PLATFORM_AUTH` is `connect` or `service`; anything else stops the server ("PLATFORM_AUTH is connect or service"). Without it, the app uses `service` if `PLATFORM_SERVICE_KEY` is set, and `connect` if not. An instance upgraded from v0.1.0 with a service key stays in service mode. See [Configuration](/docs/operate/configuration#the-agent-platform).
@@ -170,7 +170,7 @@ Every call to the platform after sign-in carries `Authorization: Bearer <the per
 | `POST /v1/agents/{agent}/threads/{thread}/stop` | Stops a reply. |
 | `GET /v1/agents/{agent}/threads/{thread}/events` | Follows one open conversation (server-sent events). |
 | `GET /v1/agents/events` | One connection **per person**, with their own token, open while they have the app open (it closes a minute after their last tab), that says when conversations are created, renamed, start or finish a reply, or are deleted. |
-| `GET /v1/teams/{team}/usage` | The person's own usage, for Settings → Usage. |
+| `GET /v1/teams/{team}/usage` | The person's own usage (`{team}` is their personal workspace), for Settings → Usage, and, with **Usage of connected people** on, for [Admin → Usage](/docs/administer/usage#in-connect-mode): an administrator opening it reads each connected person's, with that person's token. |
 
 Conversation requests are relayed as they are, with the platform's answers passed back. The platform decides what the person may see and do, so a refusal is the platform's.
 

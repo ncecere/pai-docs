@@ -1,0 +1,45 @@
+---
+title: v0.5.0
+description: "Pi Agent Interface v0.5.0 (2026-10-19): long conversation lists drawn a page at a time, usage with Connect, and search inside messages. Migration 4 adds the table message search uses. The two new features are off until an administrator turns them on."
+---
+
+**Released 2026-10-19.** Tag [`v0.5.0`](https://github.com/ncecere/pi-agent-interface/tree/v0.5.0) · image `ghcr.io/ncecere/pi-agent-interface:v0.5.0` (`sha256:0df3c305657a9a8a38f6eca78329a7f12854a370bc640926e0fc4af94e668fa1`) · commit `df32023` · migrations 1 to 4 (4 is new).
+
+Long lists, usage with Connect, and search inside messages. A database migration (4) adds the table the optional message search uses; it runs when a pod starts, and an older release started against the migrated database still works. The two new features are off until an administrator turns them on. These docs describe this release.
+
+## Upgrading from 0.4.0
+
+Replace the image and restart. Migration 4 runs when a pod starts. There is nothing else to do, and both new features are off unless an administrator turns them on. See [Upgrades and backups](/docs/operate/upgrades-and-backups#from-v040-to-v050). Upgrading from an older version? Read the [v0.4.0](/docs/releases/v0-4-0), [v0.3.1](/docs/releases/v0-3-1), [v0.3.0](/docs/releases/v0-3-0), [v0.2.1](/docs/releases/v0-2-1) and [v0.2.0](/docs/releases/v0-2-0#upgrading-from-010) notes too.
+
+## The image
+
+```text
+ghcr.io/ncecere/pi-agent-interface:v0.5.0
+ghcr.io/ncecere/pi-agent-interface@sha256:0df3c305657a9a8a38f6eca78329a7f12854a370bc640926e0fc4af94e668fa1
+```
+
+It is signed with cosign keyless signing, and the signature was verified. Check it yourself before you deploy, and deploy by digest:
+
+```sh
+cosign verify ghcr.io/ncecere/pi-agent-interface@sha256:0df3c305657a9a8a38f6eca78329a7f12854a370bc640926e0fc4af94e668fa1 \
+  --certificate-identity https://github.com/ncecere/pi-agent-interface/.github/workflows/image.yml@refs/tags/v0.5.0 \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+See [The container image](/docs/operate/container#getting-the-image).
+
+## What's new
+
+- **Long conversation lists.** The sidebar draws 40 conversations of each shelf and adds 40 with each **Show more**, always keeping the open one in its list. A search still looks through all of them, and opens the Settled and Archived shelves that hold a match. **Settings → Conversations** pages its lists the same way and has a search box once they are long. With 2,000 conversations, measured on one machine, the sidebar went from about 2,000 rows and 103,000 page elements to 40 rows and 2,200, and the first row from about 5 seconds to 0.1. The platform's list has no paging, so the whole list still comes from it. The app now gzips its JSON and scripts, which went out uncompressed, and keeps only the newest 100 conversations per agent in the browser's copy. See [Long lists](/docs/use/inbox#long-lists) and [Settings → Conversations](/docs/use/settings#conversations).
+- **Usage with Connect** (a new optional feature, **Usage of connected people**, off by default). [Admin → Usage](/docs/administer/usage#in-connect-mode) reads each connected person's own personal-workspace report with their own connection, a few at a time and kept for a minute. It lists, apart, the people who haven't connected and those the platform wouldn't report on, so they are never counted as zero. It covers only the agents in people's personal workspaces. The team-wide Usage stays for service mode. See [Features](/docs/administer/features#usage-of-connected-people).
+- **Search inside messages** (a new optional feature, **Search message text**, off by default). The platform can't search messages, so the app keeps its own searchable copy of the text of conversations people open in it, in its database (migration 4; PostgreSQL full-text search, matching the start of words). The sidebar's search then shows **In messages** results with the matching words marked. Each person searches only their own. A copy is deleted with the conversation (when it is deleted here), and turning the feature off deletes every copy and is recorded in the audit log. It covers only conversations opened through this app. This is the one place the app keeps conversation text, which is why it is off until an administrator turns it on. See [Search inside messages](/docs/use/inbox#search-inside-messages), [Features](/docs/administer/features#search-message-text), [PostgreSQL and migrations](/docs/operate/database#conversation-text-when-message-search-is-on) and [Security](/docs/operate/security#message-search-stores-text).
+- **The Kubernetes base passes `SESSION_SECRET_PREVIOUS`.** It is an optional key of the `pi-agent-interface-runtime` Secret, so a rotation there is just adding the key. In v0.4.0 the base didn't, and an overlay had to add it. See [Rotating the session secret](/docs/operate/rotating-the-session-secret#on-kubernetes).
+
+## New settings
+
+No new environment variables. The two new features are switches in [Admin → Features](/docs/administer/features), named `connectedUsage` and `messageSearch` in `DISABLED_FEATURES`.
+
+| Feature | Name | Default |
+|---|---|---|
+| Usage of connected people | `connectedUsage` | Off. Connect mode only. |
+| Search message text | `messageSearch` | Off. |

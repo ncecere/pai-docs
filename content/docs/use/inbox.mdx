@@ -1,6 +1,6 @@
 ---
 title: The inbox
-description: How Pi Agent Interface's sidebar sorts every conversation by what it needs from you, and how to pin, snooze, settle, archive, rename, search and delete conversations.
+description: How Pi Agent Interface's sidebar sorts every conversation by what it needs from you, how long lists are drawn a page at a time, and how to pin, snooze, settle, archive, rename, search (titles, and messages when your administrator allows) and delete conversations.
 ---
 
 The sidebar is one list of every conversation with every one of your agents, sorted by what each needs from you. Agents keep working while you are elsewhere, so the inbox is how you notice a reply that finished, a reply that failed, or a snooze that ran out.
@@ -21,6 +21,12 @@ The sidebar is one list of every conversation with every one of your agents, sor
 The shelves start closed, with a count, for example **Snoozed (2)**; select one to open it. This browser remembers which are open. A closed shelf still shows the conversation you have open, so it never vanishes from under you.
 
 When you have more than one agent, buttons above the list (**All**, then each agent) show only one agent's conversations.
+
+## Long lists
+
+A long list is drawn a page at a time. Each of **Pinned**, **Working**, **Inbox**, **Snoozed**, **Settled** and **Archived** shows its first **40** conversations. When there are more, the list ends with a button such as **Show 40 more · 125 not shown**; select it to add 40 more (the last time, the number that is left). The conversation you have open always stays in its list, wherever it is in the order, so it never disappears because it is further down.
+
+What is not drawn is still there, and a search still looks through **all** of your conversations, not just the ones drawn. Starting a search, or choosing another agent above the list, starts again from the first page.
 
 ## A row
 
@@ -67,7 +73,7 @@ Point at a row to see **Pin**, **Snooze**, **Settle** and **More actions** (…)
 - **Settled** ones come back to the Inbox when anything new happens in them: a message, a finished reply. **Un-settle** brings one back by hand.
 - **Archived** ones stay put whatever happens, until you **Restore** them.
 
-To restore or delete many settled or archived conversations at once, use [Settings → Conversations](/docs/use/settings#conversations).
+To restore or delete many settled or archived conversations at once, use [Settings → Conversations](/docs/use/settings#conversations), which pages its lists the same way.
 
 ## Rename a conversation
 
@@ -75,7 +81,24 @@ A conversation's title starts as the beginning of your first message. **Rename�
 
 ## Search
 
-**Search conversations...** at the top of the sidebar filters your conversations by title as you type, across every section and shelf. Escape clears it. When nothing matches, the Inbox says **No conversations match.** Search looks at titles only, not at what was said.
+**Search conversations...** at the top of the sidebar filters your conversations by title as you type, across every section and shelf, including all the conversations that aren't drawn yet. Escape clears it. When nothing matches, the Inbox says **No conversations match.**
+
+While you search, the **Settled** and **Archived** shelves, and **Snoozed**, open by themselves if they hold a match, so a match isn't hidden behind a closed shelf. A shelf with no match isn't shown. If a list has more than 40 matches, the rest are behind **Show more**.
+
+Search looks at titles, and, when your administrator has turned on [message search](#search-inside-messages), at what was said too.
+
+### Search inside messages
+
+When your administrator has turned on **Search message text** (see [Features](/docs/administer/features#search-message-text)), a search of two or more letters or digits also looks inside messages. Results appear in a section **In messages**, above **Pinned**, once you stop typing for a moment. Each is a conversation with its title and a line of the message where the words were found, with the words that matched marked. Select one to open it.
+
+- **It matches the start of words.** Each word you type is matched as the beginning of a word: "expen" finds "expense". Every word you type has to be in the conversation, but not next to each other. Case doesn't matter. Only letters and digits count, and the first eight words are used.
+- **A conversation found by its title isn't repeated** in **In messages**; it shows in its own place in the list. If you filter by one agent above the list, only that agent's conversations show.
+- **Only conversations you have opened in this app.** The app keeps its own searchable copy of a conversation's text as you read it here. A conversation you have never opened in this app isn't found by its messages (its title still is). The sidebar says so: "Only conversations opened in this app are searched."
+- **Your own only.** You search your conversations, nobody else's, and nobody else can search yours. What is searched is what you and the agent said, not the agent's thinking or tool output.
+- **Deleting** a conversation here deletes its searchable copy too.
+- While it searches, the section says **Searching…**; when nothing is found it says **No messages match.**
+
+If **In messages** never appears, message search is off for your instance.
 
 To start a chat or run a command from the keyboard, use the [command palette](/docs/use/keyboard-shortcuts#the-command-palette) (⌘ K or Ctrl K).
 

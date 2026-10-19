@@ -1,12 +1,12 @@
 ---
 title: Usage
-description: How much each person's agents use their models in Pi Agent Interface — requests, tokens and an estimated cost from the agent platform's usage report.
+description: How much each person's agents use their models in Pi Agent Interface — requests, tokens and an estimated cost, from the agent platform's team usage report in service mode, or from each connected person's own report in Connect mode.
 ---
 
-**Admin → Usage** shows how much each person's agents use their models over the last **7 days**, **30 days** or **90 days**. It is an [optional feature](/docs/administer/features), **Usage**, on by default; while it is off, the page isn't in the admin page list.
+**Admin → Usage** shows how much each person's agents use their models over the last **7 days**, **30 days** or **90 days**. In service mode it is an [optional feature](/docs/administer/features), **Usage**, on by default; while it is off, the page isn't in the admin page list.
 
-<Callout type="warn" title="Not in Connect mode">
-  In Connect mode this page is locked off: people's agents are in their own personal workspaces, which administrators don't see, so there is no team report to read. [Features](/docs/administer/features#connect-mode) shows the reason. Everyone can still see their own usage in Settings → Usage if **Personal usage** is on. The rest of this page is about service mode.
+<Callout title="Two variants">
+  In service mode this page reads the team's usage report, and is the **Usage** feature (on by default). In Connect mode **Usage** is locked off, since people's agents are in their own personal workspaces, and the page is instead the **Usage of connected people** feature (off by default): [Features](/docs/administer/features#usage-of-connected-people) says what it reads. The sections below are about service mode; [In Connect mode](#in-connect-mode) says what is different.
 </Callout>
 
 <Screenshot slot="admin-usage" />
@@ -21,6 +21,16 @@ The figures come from the agent platform's usage report for the app's team (`GET
 - **The cost is an estimate** from the prices the platform has for each model. A dash means none of the requests were to priced models; a **+** after a cost means some requests weren't priced and aren't in it. Cost appears once the platform has prices for the models.
 
 If the platform's report can't be read, the page says "The usage report could not be read" and why. A platform without the usage report is a reason to lock the feature off with `DISABLED_FEATURES=usage`.
+
+## In Connect mode
+
+With [Connect](/docs/operate/platform) the page is the **Usage of connected people** feature, which an administrator turns on in [Admin → Features](/docs/administer/features#usage-of-connected-people); until then the page isn't in the admin page list. It looks the same, with these differences:
+
+- **Where the numbers come from.** There is no team report to read, so the app reads each connected person's own report from the platform, by agent and by day, **with that person's own connection**, when you open the page, a few people at a time. Each person's report is kept for a minute, so reopening the page is quick, and a change in the platform's figures can take up to a minute to show.
+- **Only agents in people's personal workspaces.** What people run in their teams isn't counted. The page's description says so: "Agents of their teams are not counted."
+- **Who isn't covered is listed apart.** A fifth figure, **Not covered** ("not connected, or not reachable"), counts the people who aren't in the figures, and the list **Not in these figures** names them, with "Their use is unknown here, which is not the same as none." Each shows either **Has not connected**, or **Could not be read** with the reason (for example "The platform answered 503." or "The platform could not be reached."), for a person whose connection ended just now or whose report the platform wouldn't give. They are never counted as zero, and one person's failure doesn't lose the others.
+- **Someone connected who used nothing** has no row in **By person**. There is no **Other agents** row.
+- Days are in UTC and the estimated cost works as above.
 
 ## People's own usage
 

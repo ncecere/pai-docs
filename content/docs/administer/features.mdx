@@ -3,16 +3,42 @@ title: Features
 description: Optional parts of Pi Agent Interface an instance can do without, turned on and off in Admin → Features, locked off with DISABLED_FEATURES, or locked off by Connect mode.
 ---
 
-**Admin → Features** lists the parts of the app this instance can do without. Turning one off hides it for everyone; its data stays where it is. Each switch saves at once ("Usage is off.") and is recorded in the audit log ("Morgan Lee changed which features are on").
+**Admin → Features** lists the parts of the app this instance can do without. Turning one off hides it for everyone; its data stays where it is, with one exception: turning off [Search message text](#search-message-text) deletes what it kept. Each switch saves at once ("Usage is off.") and is recorded in the audit log ("Morgan Lee changed which features are on").
 
 <Screenshot slot="admin-features" />
 
 | Feature | Name in `DISABLED_FEATURES` | Default | What it does |
 |---|---|---|---|
 | **Usage** | `usage` | On, but **locked off in Connect mode** | Administrators see how much each person's agents use their models in [Admin → Usage](/docs/administer/usage): requests, tokens and an estimated cost, from the platform's usage reports. Works in service mode only. |
+| **Usage of connected people** | `connectedUsage` | Off, and **locked off in service mode** | In Connect mode, the same page, built from each connected person's own report. [See below](#usage-of-connected-people). |
+| **Search message text** | `messageSearch` | Off | The sidebar's search also looks inside messages, using a searchable copy the app keeps. [See below](#search-message-text). |
 | **Personal usage** | `myUsage` | Off | Everyone sees how much their own agents use their models in [Settings → Usage](/docs/use/settings#usage): requests, tokens and an estimated cost, per agent and per day. Nobody sees anyone else's. Works in both modes. |
 
 Each row says what happens if nobody changes it: "On unless changed here" or "Off unless changed here".
+
+## Usage of connected people
+
+With [Connect](/docs/operate/platform), **Usage** is locked off (see [Connect mode](#connect-mode) below), so this feature is the way to see usage there. Turn it on and [Admin → Usage](/docs/administer/usage#in-connect-mode) appears, for the people who have connected their platform account.
+
+- **What it reads.** When an administrator opens Admin → Usage, the app reads each connected person's own usage report from the platform, **with that person's own connection**: by agent and by day, for the last 7, 30 or 90 days. It reads a few people at a time, so opening the page costs a few calls to the platform for each person.
+- **Only personal-workspace agents.** It covers what people run in their personal workspaces, not agents of their teams.
+- **Who isn't covered is listed apart.** People who haven't connected, and people whose report the platform wouldn't give (it was down, or their connection ended just now), are listed under **Not in these figures**, never counted as zero. A person who is connected but used nothing has no row.
+- **Kept for a minute.** Each person's report is kept by the app for a minute, so opening the page again straight away is quick and doesn't ask the platform again.
+
+In service mode it is locked off, with the note "Only with Connect. In the service-account mode, Usage already reports the whole team." While it is off in Connect mode, Admin → Usage isn't offered.
+
+## Search message text
+
+The platform can't search inside messages, so with the sidebar's search the app only matches conversation titles. This feature lets it look inside messages too ([In messages](/docs/use/inbox#search-inside-messages) for the people using it). To do that the app keeps its own searchable copy of the text of conversations. It is **off by default**, because it is the one place the app holds conversation text.
+
+- **What is stored.** What people and the agent said, in order: not the agent's thinking, tool output or errors, and the first 200,000 characters of a conversation. One copy for each person and conversation, kept up to date while the person has the conversation open.
+- **Where.** In the app's own PostgreSQL database, in the `message_index` table (migration 4), with PostgreSQL's full-text search. See [PostgreSQL and migrations](/docs/operate/database#conversation-text-when-message-search-is-on) and [Security](/docs/operate/security#message-search-stores-text). The platform's own record stays the record.
+- **Who can see it.** Each person searches only their own conversations. Nobody else's, administrators' included, can be searched or shown in the app.
+- **Deleted with the conversation.** When a person deletes a conversation here, its copy is deleted with it. A conversation deleted somewhere else, on the platform directly, leaves a copy nobody sees until the feature is turned off.
+- **Deleted entirely when turned off.** Turning the switch off deletes every copy, at once, and the [audit log](/docs/administer/audit-log) records it, with how many conversations were deleted. Turning it on again starts with nothing: conversations are copied again as people open them.
+- **Only conversations opened here.** The app copies a conversation when a person opens it through the app, from then on. Conversations never opened in the app, or opened only on the platform, aren't searchable by message.
+
+The sidebar says so under the results: "Only conversations opened in this app are searched."
 
 ## What "off" means
 
@@ -22,9 +48,9 @@ The server enforces it: while a feature is off, its routes answer as if they did
 
 When the instance uses [Connect](/docs/operate/platform) (`PLATFORM_AUTH=connect`, the default without a service key), **Usage is locked off**. People's agents are in their own personal workspaces on the platform, which this app's administrators don't see, so there is no team report to show. On this page its switch is off and can't be turned on, and the row gives the reason:
 
-> Needs the service-account mode: with Connect, people's agents are in their own workspaces, which this app's administrators don't see.
+> Needs the service-account mode: with Connect, people's agents are in their own workspaces, which this app's administrators don't see. "Usage of connected people" reads them person by person instead.
 
-**Admin → Usage** is gone from the admin page list. **Personal usage** isn't affected: with it on, each person sees their own usage in Settings → Usage, from their personal workspace's report, in both modes.
+**Usage of connected people** is the replacement: until an administrator turns it on, **Admin → Usage** is gone from the admin page list. **Personal usage** isn't affected: with it on, each person sees their own usage in Settings → Usage, from their personal workspace's report, in both modes.
 
 <Screenshot slot="admin-features-locked" />
 
@@ -33,7 +59,7 @@ When the instance uses [Connect](/docs/operate/platform) (`PLATFORM_AUTH=connect
 A deployment that can't support a feature, for example a platform without the usage report it needs, lists it in `DISABLED_FEATURES`, comma-separated:
 
 ```sh
-DISABLED_FEATURES=usage,myUsage
+DISABLED_FEATURES=usage,connectedUsage,messageSearch,myUsage
 ```
 
-The names are case-sensitive. An unknown name stops the server at start (`DISABLED_FEATURES: there is no feature "…" (known: usage, myUsage)`). A locked feature is off whatever administrators chose, and its switch is turned off with the note "Turned off by this deployment (DISABLED_FEATURES)." Removing it from the variable restores the administrators' choice. (In Connect mode, `usage` shows the Connect reason above instead.)
+The names are case-sensitive. An unknown name stops the server at start (`DISABLED_FEATURES: there is no feature "…" (known: usage, connectedUsage, messageSearch, myUsage)`). A locked feature is off whatever administrators chose, and its switch is turned off with the note "Turned off by this deployment (DISABLED_FEATURES)." Removing it from the variable restores the administrators' choice. (In Connect mode, `usage` shows the Connect reason above instead, and in service mode `connectedUsage` shows its own.) Turning `messageSearch` off this way hides search inside messages, but doesn't delete what the app has already kept: only turning it off in Admin → Features does.

@@ -3,7 +3,7 @@ title: Kubernetes
 description: The Kustomize base in Pi Agent Interface's repository — a two-replica Deployment, probes, a PodDisruptionBudget, default-deny NetworkPolicies and the secret it expects — and what your overlay adds.
 ---
 
-The product's repository has a generic [Kustomize](https://kustomize.io) base, `deploy/kubernetes/base`, and a README for it (`deploy/kubernetes/README.md`). This page describes the base as it is at v0.4.0. There is no Helm chart.
+The product's repository has a generic [Kustomize](https://kustomize.io) base, `deploy/kubernetes/base`, and a README for it (`deploy/kubernetes/README.md`). This page describes the base as it is at v0.5.0. There is no Helm chart.
 
 The base holds **no secret values, no namespace and no ingress**. Your own overlay supplies those.
 
@@ -34,7 +34,7 @@ The base holds **no secret values, no namespace and no ingress**. Your own overl
 
 | File | Makes |
 |---|---|
-| `kustomization.yaml` | Lists the resources, generates the ConfigMap, and sets the image to `ghcr.io/ncecere/pi-agent-interface` at tag `v0.4.0`. |
+| `kustomization.yaml` | Lists the resources, generates the ConfigMap, and sets the image to `ghcr.io/ncecere/pi-agent-interface` at tag `v0.5.0`. |
 | `config.env` | The settings in the ConfigMap `pi-agent-interface-config` (below). The name gets a hash of the content, and the Deployment's reference follows, so a change to the settings rolls the pods. |
 | `deployment.yaml` | The Deployment `pi-agent-interface` and its PodDisruptionBudget. |
 | `service.yaml` | A ClusterIP Service `pi-agent-interface` on port 80, to the container's port 8080, with no session affinity: conversations stream through the app, which any replica serves. |
@@ -91,7 +91,8 @@ The Deployment reads secret values from a Secret named **`pi-agent-interface-run
 | Key | Needed | Holds |
 |---|---|---|
 | `DATABASE_URL` | Always | The app's own PostgreSQL. |
-| `SESSION_SECRET` | Always | 32 or more characters (`openssl rand -base64 48`). It encrypts sessions and the platform tokens the app keeps, so changing it alone signs everyone out and asks everyone to connect again. To replace it without that, [rotate it](/docs/operate/rotating-the-session-secret); the base doesn't pass `SESSION_SECRET_PREVIOUS` on, so that page shows the patch your overlay needs. |
+| `SESSION_SECRET` | Always | 32 or more characters (`openssl rand -base64 48`). It encrypts sessions and the platform tokens the app keeps, so changing it alone signs everyone out and asks everyone to connect again. To replace it without that, [rotate it](/docs/operate/rotating-the-session-secret); from v0.5.0 the base passes an optional `SESSION_SECRET_PREVIOUS` key of this Secret on to the app, so a rotation is just adding the key. On v0.4.0 the base didn't, and that page shows the patch an overlay then needs. |
+| `SESSION_SECRET_PREVIOUS` | Only while rotating | The old secret or secrets, comma-separated (v0.5.0 and later). The reference is optional, so the pod starts without the key. |
 | `OIDC_CLIENT_SECRET` | Always | The identity provider client's secret. |
 | `PLATFORM_SERVICE_KEY` | Service mode only | The team service account's key. The reference is optional, so Connect mode needs no such key. |
 
@@ -118,14 +119,14 @@ This is how the app reaches the agent platform and the identity provider: over h
 
 ### A namespace and an image pin
 
-The base uses the release tag. Pin the digest from the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.4.0), after verifying its signature (see [The container image](/docs/operate/container#getting-the-image)). The digest takes precedence over the tag. Never use `latest`.
+The base uses the release tag. Pin the digest from the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.5.0), after verifying its signature (see [The container image](/docs/operate/container#getting-the-image)). The digest takes precedence over the tag. Never use `latest`.
 
 ```yaml
 namespace: pi-agent-interface
 images:
   - name: ghcr.io/ncecere/pi-agent-interface
-    newTag: v0.4.0
-    digest: sha256:9c140c7c6442bae5c31bacedaa395d92bcf83cfc41f2c5dcc6cdcd1cca50c399
+    newTag: v0.5.0
+    digest: sha256:0df3c305657a9a8a38f6eca78329a7f12854a370bc640926e0fc4af94e668fa1
 ```
 
 </Step>

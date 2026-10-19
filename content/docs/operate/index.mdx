@@ -9,7 +9,7 @@ Pi Agent Interface is one Node.js server, in one container image, that serves th
 |---|---|---|
 | **A Pi Durable platform**: in Connect mode (the default), one that offers Connect and has personal workspaces on; in service mode, a team with an editor service account, its key and a published model | The agents and their conversations | [The agent platform](/docs/operate/platform) |
 | **An OpenID Connect provider** with a confidential client | Sign-in | [Sign-in](/docs/operate/sign-in) |
-| **PostgreSQL** | People, roles, settings, preferences and the audit log | [PostgreSQL and migrations](/docs/operate/database) |
+| **PostgreSQL** | People, roles, settings, preferences and the audit log (and, if message search is turned on, a searchable copy of conversation text) | [PostgreSQL and migrations](/docs/operate/database) |
 | **A reverse proxy or ingress** that terminates TLS and doesn't buffer event streams | The public https address | [The container image](/docs/operate/container#behind-a-reverse-proxy) |
 
 The server is configured with environment variables, checked when it starts: an incomplete or unsafe configuration stops it with every problem listed. See [Configuration](/docs/operate/configuration).
@@ -37,7 +37,7 @@ Pi Durable platform ──https──▶ <APP_URL>/oauth/client-metadata.json   
 
 <Cards>
   <Card title="PostgreSQL and migrations" href="/docs/operate/database">What the app stores and how its schema is migrated.</Card>
-  <Card title="Security" href="/docs/operate/security">Platform tokens, sessions, CSRF and origin checks, ownership checks and limits.</Card>
+  <Card title="Security" href="/docs/operate/security">Platform tokens, sessions, CSRF and origin checks, ownership checks, limits, gzip, and what message search stores.</Card>
   <Card title="Rotating the session secret" href="/docs/operate/rotating-the-session-secret">Replacing SESSION_SECRET without signing anyone out.</Card>
   <Card title="Metrics" href="/docs/operate/metrics">Optional Prometheus metrics on a port of their own, and the Kubernetes component with its alerts.</Card>
   <Card title="Upgrades and backups" href="/docs/operate/upgrades-and-backups">Moving to a new version, what to back up, and how to restore.</Card>

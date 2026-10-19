@@ -17,7 +17,7 @@ const sections = [
     href: '/docs/use',
     icon: <MessagesSquare />,
     description:
-      'Chatting with an agent, tool steps and reasoning, the inbox, keyboard shortcuts, accessibility, your own agents, connecting your platform account and your settings.',
+      'Chatting with an agent, tool steps and reasoning, the inbox and searching it, keyboard shortcuts, accessibility, your own agents, connecting your platform account and your settings.',
   },
   {
     title: 'Administer',
@@ -37,7 +37,7 @@ const sections = [
     title: 'Releases',
     href: '/docs/releases',
     icon: <Tag />,
-    description: `What changed in each release: ${productVersion} is the latest: access and administrators by identity-provider group, rotating the session secret, Prometheus metrics, a rehearsed restore, and browser and accessibility tests. Before it: two inbox fixes, and when, which model and how many tokens with each message.`,
+    description: `What changed in each release: ${productVersion} is the latest: long conversation lists drawn a page at a time, usage with Connect, and search inside messages. Before it: access and administrators by identity-provider group, rotating the session secret, Prometheus metrics and a rehearsed restore.`,
   },
 ];
 

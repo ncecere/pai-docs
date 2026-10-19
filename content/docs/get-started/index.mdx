@@ -19,7 +19,7 @@ People sign in to Pi Agent Interface with your single sign-on. To reach their ag
     Reasoning and tool steps gathered in one block above the answer, with the latest steps shown live while the agent works.
   </Card>
   <Card title="An inbox across conversations" href="/docs/use/inbox">
-    Pinned, Working and Inbox, with Snoozed, Settled and Archived shelves. It follows you between devices.
+    Pinned, Working and Inbox, with Snoozed, Settled and Archived shelves. Long lists are drawn a page at a time, and search can look inside messages. It follows you between devices.
   </Card>
   <Card title="Your own agents" href="/docs/use/agents">
     Provided agents everyone gets a private copy of, and agents you make yourself from the templates your administrator allows.
@@ -28,13 +28,13 @@ People sign in to Pi Agent Interface with your single sign-on. To reach their ag
     People and roles, the default model and templates, provided agents, branding, optional features, usage and an audit log.
   </Card>
   <Card title="Small to run" href="/docs/operate">
-    One Node.js process and a PostgreSQL database for people, roles and settings. Conversations stay on the platform.
+    One Node.js process and a PostgreSQL database for people, roles and settings. Conversations stay on the platform, unless you turn on message search.
   </Card>
 </Cards>
 
 ## How it is built
 
-Pi Agent Interface is one Node.js server that serves the web app and its API from one container image. It keeps its own records (the people who have signed in, their roles, settings, preferences and an audit log) in **PostgreSQL**, and migrates the database when it starts. The agents and their conversations live on the **Pi Durable platform**: in each person's personal workspace, reached with that person's own token (kept encrypted, and never sent to the browser), or, in service mode, in a team the app reaches with a service account key that never leaves the server. Sessions are encrypted cookies, so there is no session store to run.
+Pi Agent Interface is one Node.js server that serves the web app and its API from one container image. It keeps its own records (the people who have signed in, their roles, settings, preferences and an audit log) in **PostgreSQL**, and migrates the database when it starts. The agents and their conversations live on the **Pi Durable platform** (the one exception is the optional [message search](/docs/administer/features#search-message-text), which keeps a searchable copy of the text of conversations people open here): in each person's personal workspace, reached with that person's own token (kept encrypted, and never sent to the browser), or, in service mode, in a team the app reaches with a service account key that never leaves the server. Sessions are encrypted cookies, so there is no session store to run.
 
 ```text
 Morgan, Priya, Sam ──sign in──▶ Pi Agent Interface ──each person's own token──▶ Pi Durable platform
@@ -58,9 +58,9 @@ If you only want to see it working, follow the [quick start](/docs/get-started/q
 
 ## Project status
 
-Pi Agent Interface is **pre-1.0**. The latest release is **v0.4.0** (2026-10-19), and these docs describe it: Connect, the app's own database, the admin dashboard, Settings, people's own agents, a published, signed container image, and, since v0.4.0, access and administrators by identity-provider group, session-secret rotation, Prometheus metrics and a rehearsed restore. See [Releases](/docs/releases). In short:
+Pi Agent Interface is **pre-1.0**. The latest release is **v0.5.0** (2026-10-19), and these docs describe it: Connect, the app's own database, the admin dashboard, Settings, people's own agents, a published, signed container image; since v0.4.0, access and administrators by identity-provider group, session-secret rotation, Prometheus metrics and a rehearsed restore; and, since v0.5.0, long conversation lists drawn a page at a time, usage of connected people and search inside messages (both optional, off until an administrator turns them on). See [Releases](/docs/releases). In short:
 
 - The app's HTTP API serves its own web app. It is not a public contract and may change in any release.
 - Database migrations are forward-only. Going back past one means restoring a backup.
-- The container image is published and signed: `ghcr.io/ncecere/pi-agent-interface:v0.4.0`. See [The container image](/docs/operate/container#getting-the-image).
+- The container image is published and signed: `ghcr.io/ncecere/pi-agent-interface:v0.5.0`. See [The container image](/docs/operate/container#getting-the-image).
 - People [connect their own platform account](/docs/use/connect-your-platform-account) once, so their agents live in their personal workspace. A platform without Connect still works with a team service account.

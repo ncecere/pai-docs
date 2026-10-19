@@ -7,18 +7,18 @@ Pi Agent Interface ships as one container image: one Node.js 22 process that ser
 
 ## Getting the image
 
-Since v0.2.0 the image is published: `ghcr.io/ncecere/pi-agent-interface`. The repository's release workflow (`.github/workflows/image.yml`) builds it for each release tag as a **multi-arch** image (linux/amd64 and linux/arm64), scans it for vulnerabilities, attaches SBOM and provenance attestations, tags it `vX.Y.Z` (and `latest` for final releases) and **signs** it with cosign keyless signing. The v0.4.0 image is:
+Since v0.2.0 the image is published: `ghcr.io/ncecere/pi-agent-interface`. The repository's release workflow (`.github/workflows/image.yml`) builds it for each release tag as a **multi-arch** image (linux/amd64 and linux/arm64), scans it for vulnerabilities, attaches SBOM and provenance attestations, tags it `vX.Y.Z` (and `latest` for final releases) and **signs** it with cosign keyless signing. The v0.5.0 image is:
 
 ```text
-ghcr.io/ncecere/pi-agent-interface:v0.4.0
-ghcr.io/ncecere/pi-agent-interface@sha256:9c140c7c6442bae5c31bacedaa395d92bcf83cfc41f2c5dcc6cdcd1cca50c399
+ghcr.io/ncecere/pi-agent-interface:v0.5.0
+ghcr.io/ncecere/pi-agent-interface@sha256:0df3c305657a9a8a38f6eca78329a7f12854a370bc640926e0fc4af94e668fa1
 ```
 
-The digest is also on the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.4.0). A tag can move, so check the signature before you deploy, and deploy by digest:
+The digest is also on the [GitHub Release](https://github.com/ncecere/pi-agent-interface/releases/tag/v0.5.0). A tag can move, so check the signature before you deploy, and deploy by digest:
 
 ```sh
-cosign verify ghcr.io/ncecere/pi-agent-interface@sha256:9c140c7c6442bae5c31bacedaa395d92bcf83cfc41f2c5dcc6cdcd1cca50c399 \
-  --certificate-identity https://github.com/ncecere/pi-agent-interface/.github/workflows/image.yml@refs/tags/v0.4.0 \
+cosign verify ghcr.io/ncecere/pi-agent-interface@sha256:0df3c305657a9a8a38f6eca78329a7f12854a370bc640926e0fc4af94e668fa1 \
+  --certificate-identity https://github.com/ncecere/pi-agent-interface/.github/workflows/image.yml@refs/tags/v0.5.0 \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
@@ -27,7 +27,7 @@ The identity names the workflow and the release tag that built the image, so for
 ```sh
 git clone https://github.com/ncecere/pi-agent-interface.git
 cd pi-agent-interface
-git checkout v0.4.0
+git checkout v0.5.0
 docker build -t pi-agent-interface .
 ```
 
@@ -57,7 +57,7 @@ docker run -d --name pai \
 See [Configuration](/docs/operate/configuration) for `pai.env`. The server writes nothing to disk, so it runs with a read-only root filesystem (the release workflow checks the image by running it with `--read-only`), as the `node` user. On start it migrates the database, then listens, and logs where:
 
 ```text
-[server] database migrated: 1, 2, 3
+[server] database migrated: 1, 2, 3, 4
 [server] http://0.0.0.0:8080 for https://chat.example.com · platform https://agents.example.com · team pi-agent-interface · single sign-on
 ```
 
@@ -81,6 +81,7 @@ With `METRICS_ENABLED=true` the app also serves Prometheus metrics on a second p
 Put a reverse proxy or ingress in front that terminates TLS, and:
 
 - **Doesn't buffer or time out the event streams.** `/api/events` (the inbox) and `/api/agents/*/threads/*/events` (an open conversation) are server-sent event streams that stay open. The app sends `X-Accel-Buffering: no` and a keep-alive comment on `/api/events` every 15 seconds; the platform sends one every 15 seconds on conversation streams. Set the read timeout to an hour or more.
+- **Knows the app gzips.** Since v0.5.0 the app compresses its scripts and JSON (such as a long conversation list) with gzip for browsers that accept it, and leaves event streams uncompressed. Before v0.5.0 they went out uncompressed.
 - **Passes `Host` and `X-Forwarded-*` through**, and keeps `APP_URL` equal to the public address. Writes are refused unless the browser's `Origin` is `APP_URL`'s origin.
 - **Leaves `/oauth/client-metadata.json` open** in Connect mode. The platform fetches it from the app's public address, and needs a plain `200` with `application/json`: no sign-in, no redirect. See [The agent platform](/docs/operate/platform#the-client-id-metadata-document).
 

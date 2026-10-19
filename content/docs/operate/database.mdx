@@ -3,7 +3,7 @@ title: PostgreSQL and migrations
 description: What Pi Agent Interface keeps in its own PostgreSQL database, and how the schema is migrated when the server starts.
 ---
 
-Pi Agent Interface has its own PostgreSQL database, separate from the agent platform's, named by `DATABASE_URL`. Conversations aren't in it: they live on the platform. v0.1.0 had no database of its own; v0.2.0 added it, and the app creates its tables when it starts.
+Pi Agent Interface has its own PostgreSQL database, separate from the agent platform's, named by `DATABASE_URL`. Conversations aren't in it: they live on the platform. The one exception is the optional [message search](/docs/administer/features#search-message-text) (since v0.5.0), which keeps a searchable copy of the text of the conversations people open in the app, in the `message_index` table, and only while an administrator has it turned on. v0.1.0 had no database of its own; v0.2.0 added it, and the app creates its tables when it starts.
 
 ## What is in it
 
@@ -16,7 +16,16 @@ Pi Agent Interface has its own PostgreSQL database, separate from the agent plat
 | `platform_connections` | Connect mode: each connected person's platform tokens, **encrypted** (an access token and a refresh token, and when the access token expires), and the platform account they connected (its ID, email and name), with when it was last renewed. See [Security](/docs/operate/security#platform-tokens-connect-mode). |
 | `provided_copies` | Connect mode: which agent on the platform is each person's copy of each provided agent. |
 | `audit_log` | The [audit log](/docs/administer/audit-log). |
+| `message_index` | Since v0.5.0: the searchable copy of conversation text that [Search message text](/docs/administer/features#search-message-text) keeps, one row per person and conversation: the person, the agent, the conversation's ID, the text (what people and the agent said, up to 200,000 characters), when it was last indexed, and a generated full-text column with its index. **Empty unless an administrator turned the feature on**, and emptied again when it is turned off. See below. |
 | `schema_migrations` | Which migrations have been applied. |
+
+## Conversation text, when message search is on
+
+Without [Search message text](/docs/administer/features#search-message-text), nothing in the database is a conversation's text, and `message_index` is empty. With it on, the table holds, for each person and each conversation they have opened in the app, the text of what they and the agent said (not the agent's thinking, tool output or errors), up to the first 200,000 characters, kept up to date as the conversation is read. PostgreSQL's full-text search (the `simple` configuration, with each search word matched as the start of a word) runs on it.
+
+- Each row belongs to one person, and the app only ever searches a person's own rows. A row is removed when its conversation is deleted in the app, and every row is removed when an administrator turns the feature off, which is recorded in the [audit log](/docs/administer/audit-log).
+- A conversation deleted somewhere else than in this app (on the platform directly) leaves its copy behind. Nobody sees it, and it goes when the feature is turned off.
+- It is the one place the app holds conversation text, so treat a backup of the database accordingly: with message search on, it holds the text of conversations people have opened here. See [Security](/docs/operate/security#message-search-stores-text) and [Backing up and restoring](/docs/operate/upgrades-and-backups#backing-up-and-restoring).
 
 ## Requirements
 
@@ -43,8 +52,9 @@ The server applies any migrations it hasn't applied yet **every time it starts**
 | 1 | people, settings, preferences, audit log |
 | 2 | personal agents |
 | 3 | platform connections and provided copies (Connect mode) |
+| 4 | searchable copy of conversation text (`message_index`, for message search) |
 
-All three run on a new database, and on a database that was at version 1 or 2 only the rest are applied. They are created whichever mode the app uses, and the Connect tables aren't used in service mode. Migrations are forward-only and ship inside the server; a released one is never edited, only followed by the next. Going back to an older version past a migration means restoring a backup taken before it. See [Upgrades and backups](/docs/operate/upgrades-and-backups).
+All four run on a new database, and on a database at an older version only the rest are applied. They are created whichever mode the app uses, and the Connect tables aren't used in service mode. Migration 4 is new in v0.5.0 and runs when the first pod of the new version starts. An older release started against a database that has migration 4 still works, but it has no message search, so it doesn't maintain or empty the table. Migrations are forward-only and ship inside the server; a released one is never edited, only followed by the next. Going back to an older version past a migration means restoring a backup taken before it. See [Upgrades and backups](/docs/operate/upgrades-and-backups).
 
 ## For development
 

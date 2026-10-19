@@ -27,7 +27,7 @@ Your provided agents are made the first time you open the app, and every time th
 
 ## Conversations
 
-A **conversation** is a thread with one agent. It stays with the agent it started with, since its memory and tools are that agent's. Its title is the start of your first message until you [rename it](/docs/use/inbox#rename-a-conversation). Conversations are stored on the platform, not in the app's database, and deleting one deletes it from the agent for good.
+A **conversation** is a thread with one agent. It stays with the agent it started with, since its memory and tools are that agent's. Its title is the start of your first message until you [rename it](/docs/use/inbox#rename-a-conversation). Conversations are stored on the platform, not in the app's database, and deleting one deletes it from the agent for good. The one exception is a searchable copy of a conversation's text that the app keeps when your administrator has turned on [message search](/docs/administer/features#search-message-text); it is deleted with the conversation.
 
 An agent works on one reply at a time. A message you send while it works waits in a queue and runs after the current reply.
 
@@ -50,5 +50,5 @@ Everyone who signs in is a **person** with a role: **Member** or **Administrator
 |---|---|---|---|
 | **Deployment** | Environment variables | Whoever runs the server; a restart applies it | The platform's address and mode, sign-in, `AGENT_MODEL` as a fallback |
 | **Instance settings** | The app's database; Admin → Agents, Branding | Administrators, at once, recorded in the audit log | Default model, provided agents, the name and logo |
-| **Optional features** | The app's database; Admin → Features | Administrators, at once, recorded in the audit log | Usage (Admin → Usage; service mode only), Personal usage (Settings → Usage) |
+| **Optional features** | The app's database; Admin → Features | Administrators, at once, recorded in the audit log | Usage (Admin → Usage; service mode), Usage of connected people (Admin → Usage; Connect mode), Search message text (the sidebar's search), Personal usage (Settings → Usage) |
 | **Personal preferences** | The person's account; Settings | Each person, for themselves, on every device | Theme, accent, avatar style, the inbox |

@@ -1,6 +1,6 @@
 ---
 title: Security
-description: How Pi Agent Interface keeps people to their own agents — encrypted platform tokens and the account check in Connect mode, encrypted session cookies, CSRF tokens and origin checks, ownership checks, per-person stream limits and the browser's security headers.
+description: How Pi Agent Interface keeps people to their own agents — encrypted platform tokens and the account check in Connect mode, encrypted session cookies, CSRF tokens and origin checks, ownership checks, per-person stream limits, the browser's security headers, and what the optional message search stores.
 ---
 
 How Pi Agent Interface is secured depends on how it reaches the agent platform (`PLATFORM_AUTH`, see [The agent platform](/docs/operate/platform)).
@@ -46,6 +46,17 @@ In Connect mode the platform decides what a person may see and use, with their o
 - **Changing `SESSION_SECRET`** signs everyone out, unless you [rotate it](/docs/operate/rotating-the-session-secret) with `SESSION_SECRET_PREVIOUS`.
 - **Single sign-on** uses the authorization code flow with PKCE (S256), `state` and `nonce`, carried between the redirect and the callback in a second sealed cookie that lasts 10 minutes. After signing in, people return only to a path on the app itself, never another site.
 
+## Message search stores text
+
+The app doesn't keep conversations: they are on the agent platform. The one exception is the optional **Search message text** feature, [off by default](/docs/administer/features#search-message-text). Only while an administrator has it on, the app keeps a searchable copy of the text of the conversations people open in it, in its own PostgreSQL database (`message_index`; see [PostgreSQL and migrations](/docs/operate/database#conversation-text-when-message-search-is-on)).
+
+- **What is kept:** what the person and the agent said, up to 200,000 characters of each conversation. Not the agent's thinking, tool output or errors. It is stored as plain text, **not encrypted by the app** (the session secret protects tokens and cookies, not this), so the database, its backups and who may reach them matter as much as for any store of people's messages.
+- **Who can see it:** each person searches only their own copies, and an administrator has no way in the app to read or search anyone else's. Anyone with access to the database can read the table.
+- **When it goes:** a copy is deleted when its conversation is deleted in the app. Turning the feature off deletes every copy, and the audit log records it.
+- **What isn't covered:** a conversation deleted somewhere other than the app leaves a copy nobody sees until the feature is turned off.
+
+Without the feature, the app's database holds no conversation text.
+
 ## Writes: CSRF and origin
 
 Every request that changes something (anything but GET, HEAD and OPTIONS) must:
@@ -79,6 +90,7 @@ The stream limits are counted per server process.
 
   so the page runs only its own scripts and talks only to its own server. Images may come from any https address, for an administrator's logo.
 - Built assets under `/assets/` are cached for a year (their names change with their content); pages aren't cached.
+- **Gzip.** Since v0.5.0 the app compresses its text and JSON (the web app's scripts, and API answers such as a long conversation list) with gzip, for browsers that accept it. Event streams (`text/event-stream`) aren't compressed. Before v0.5.0 these went out uncompressed.
 
 ## In the browser
 

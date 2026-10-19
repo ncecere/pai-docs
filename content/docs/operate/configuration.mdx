@@ -75,7 +75,7 @@ At least one way to sign in is required: OIDC, or `DEV_AUTH` on a loopback `APP_
 |---|---|---|
 | `DATABASE_URL` (secret) | none (required) | The app's own PostgreSQL, for example `postgres://pai:…@db.example.com:5432/pai`. Required; a wrong one fails when the server connects, before it listens. Migrated on start. See [PostgreSQL and migrations](/docs/operate/database). |
 | `INITIAL_ADMIN_EMAIL` | none | Becomes an administrator on signing in, while there is no active administrator. See [The first administrator](/docs/administer/first-administrator). |
-| `DISABLED_FEATURES` | empty | Optional features to turn off for good, comma-separated: `usage`, `myUsage` (case-sensitive). An unknown name stops the server (`DISABLED_FEATURES: there is no feature "…" (known: usage, myUsage)`). In Connect mode `usage` is off whatever this says. See [Features](/docs/administer/features). |
+| `DISABLED_FEATURES` | empty | Optional features to turn off for good, comma-separated: `usage`, `connectedUsage`, `messageSearch`, `myUsage` (case-sensitive). An unknown name stops the server (`DISABLED_FEATURES: there is no feature "…" (known: usage, connectedUsage, messageSearch, myUsage)`). In Connect mode `usage` is off whatever this says, and in service mode `connectedUsage` is. See [Features](/docs/administer/features). |
 
 ## Metrics
 
