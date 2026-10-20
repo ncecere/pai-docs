@@ -11,6 +11,7 @@ The checks are in the product's browser tests (`e2e/tests/a11y.spec.ts`) and run
 
 - **Automated accessibility checks (axe, WCAG 2.0 and 2.1 levels A and AA) find nothing** on the sign-in page, the chat (home, a conversation, a row's menu, the command palette, and while an agent works), Settings and every Admin page. They run in the **light and dark themes**, and with **each of the four accents**.
 - **Keyboard focus.** Every stop of the keyboard path shows where focus is, and the first is a **Skip to main content** link. See also the [keyboard shortcuts](/docs/use/keyboard-shortcuts).
+- **Text fields on a phone.** On touch screens every text field is at least 16px, so iOS Safari doesn't zoom in when you tap one and stay zoomed (since v0.5.1). Pinch-zoom is still allowed. The browser tests check every page and dialog.
 - **Reduced motion.** With reduced motion asked for in your system settings, nothing on the page keeps animating.
 - **Screen reader announcements.** A reply starting and finishing is announced to screen readers (a polite live region).
 

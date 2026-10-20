@@ -1,0 +1,34 @@
+---
+title: v0.5.1
+description: "Pi Agent Interface v0.5.1 (2026-10-19): two fixes for phones. Text fields are at least 16px on touch screens, so iOS Safari no longer zooms in when you tap one and stays zoomed, and the greeting's comma stays on the first line."
+---
+
+**Released 2026-10-19.** Tag [`v0.5.1`](https://github.com/ncecere/pi-agent-interface/tree/v0.5.1) · image `ghcr.io/ncecere/pi-agent-interface:v0.5.1` (`sha256:cb1720a0cdb6a9231bc7cdd99fe43c1ed031e257f4d6ec9367d388e96c35fd51`) · commit `b28fdc5` · migrations 1 to 4 (none new).
+
+Two glitches on phones. No migration and no new setting. These docs describe this release.
+
+## Upgrading from 0.5.0
+
+Replace the image and restart. There is nothing to do. See [Upgrades and backups](/docs/operate/upgrades-and-backups#from-v050-to-v051). Upgrading from an older version? Read the [v0.5.0](/docs/releases/v0-5-0), [v0.4.0](/docs/releases/v0-4-0), [v0.3.1](/docs/releases/v0-3-1), [v0.3.0](/docs/releases/v0-3-0), [v0.2.1](/docs/releases/v0-2-1) and [v0.2.0](/docs/releases/v0-2-0#upgrading-from-010) notes too.
+
+## The image
+
+```text
+ghcr.io/ncecere/pi-agent-interface:v0.5.1
+ghcr.io/ncecere/pi-agent-interface@sha256:cb1720a0cdb6a9231bc7cdd99fe43c1ed031e257f4d6ec9367d388e96c35fd51
+```
+
+It is signed with cosign keyless signing, and the signature was verified. Check it yourself before you deploy, and deploy by digest:
+
+```sh
+cosign verify ghcr.io/ncecere/pi-agent-interface@sha256:cb1720a0cdb6a9231bc7cdd99fe43c1ed031e257f4d6ec9367d388e96c35fd51 \
+  --certificate-identity https://github.com/ncecere/pi-agent-interface/.github/workflows/image.yml@refs/tags/v0.5.1 \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+See [The container image](/docs/operate/container#getting-the-image).
+
+## What's fixed
+
+- **The page no longer zooms in when you tap a text field, and stays zoomed.** iOS Safari zooms into any field with text under 16px, and doesn't zoom back out, so after each tap the page had to be pinched back to size. On touch screens every text field (the message box, the conversation search, the fields in Settings and Admin, and those in dialogs) is now at least 16px. Desktop sizes are unchanged, and pinch-zoom is still allowed. The browser tests now check every page and dialog. See [Accessibility](/docs/use/accessibility#what-is-checked-automatically).
+- **The greeting** ("What should Assistant work on, Priya?") no longer starts its second line with the comma on a phone.

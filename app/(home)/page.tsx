@@ -37,7 +37,7 @@ const sections = [
     title: 'Releases',
     href: '/docs/releases',
     icon: <Tag />,
-    description: `What changed in each release: ${productVersion} is the latest: long conversation lists drawn a page at a time, usage with Connect, and search inside messages. Before it: access and administrators by identity-provider group, rotating the session secret, Prometheus metrics and a rehearsed restore.`,
+    description: `What changed in each release: ${productVersion} is the latest: two fixes for phones. Before it: long conversation lists drawn a page at a time, usage with Connect, and search inside messages; before those: access and administrators by identity-provider group, rotating the session secret, Prometheus metrics and a rehearsed restore.`,
   },
 ];
 

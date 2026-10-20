@@ -58,9 +58,9 @@ If you only want to see it working, follow the [quick start](/docs/get-started/q
 
 ## Project status
 
-Pi Agent Interface is **pre-1.0**. The latest release is **v0.5.0** (2026-10-19), and these docs describe it: Connect, the app's own database, the admin dashboard, Settings, people's own agents, a published, signed container image; since v0.4.0, access and administrators by identity-provider group, session-secret rotation, Prometheus metrics and a rehearsed restore; and, since v0.5.0, long conversation lists drawn a page at a time, usage of connected people and search inside messages (both optional, off until an administrator turns them on). See [Releases](/docs/releases). In short:
+Pi Agent Interface is **pre-1.0**. The latest release is **v0.5.1** (2026-10-19), and these docs describe it: Connect, the app's own database, the admin dashboard, Settings, people's own agents, a published, signed container image; since v0.4.0, access and administrators by identity-provider group, session-secret rotation, Prometheus metrics and a rehearsed restore; and, since v0.5.0, long conversation lists drawn a page at a time, usage of connected people and search inside messages (both optional, off until an administrator turns them on); and, in v0.5.1, two fixes for phones. See [Releases](/docs/releases). In short:
 
 - The app's HTTP API serves its own web app. It is not a public contract and may change in any release.
 - Database migrations are forward-only. Going back past one means restoring a backup.
-- The container image is published and signed: `ghcr.io/ncecere/pi-agent-interface:v0.5.0`. See [The container image](/docs/operate/container#getting-the-image).
+- The container image is published and signed: `ghcr.io/ncecere/pi-agent-interface:v0.5.1`. See [The container image](/docs/operate/container#getting-the-image).
 - People [connect their own platform account](/docs/use/connect-your-platform-account) once, so their agents live in their personal workspace. A platform without Connect still works with a team service account.
